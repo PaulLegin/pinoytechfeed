@@ -1,11 +1,8 @@
 <?php
 /**
  * build-feed.php — Generic RSS aggregator for PinoyTechFeed
- * Works anywhere (GitHub Pages, Cloudflare Pages, Netlify, Vercel, Render, Railway, local)
- * - Auto-detects SITE ORIGIN from CLI arg or common env vars
- * - Falls back gracefully if no origin found (skips <atom:link>)
+ * Works anywhere (Cloudflare Pages, GitHub Pages+Actions, Netlify, Vercel, etc.)
  */
-
 date_default_timezone_set('Asia/Manila');
 
 /* =======================
@@ -13,60 +10,47 @@ date_default_timezone_set('Asia/Manila');
    ======================= */
 $SOURCES = [
   // Gadgets → GSMArena (rss.app feed)
-  ['url' => 'https://rss.app/feeds/f92kwVzjq4XUE6h3.xml', 'tag' => 'gadgets', 'label' => 'GSMArena',       'category' => 'Gadgets'],
+  ['url' => 'https://rss.app/feeds/f92kwVzjq4XUE6h3.xml', 'tag' => 'gadgets', 'label' => 'GSMArena',               'category' => 'Gadgets'],
   // PH News → GMA (rss.app feed)
-  ['url' => 'https://rss.app/feeds/jvx17FqERQHCjtka.xml', 'tag' => 'ph',      'label' => 'GMA News',       'category' => 'PH News'],
-  // Tech & Innovation → Inquirer
-  ['url' => 'https://rss.app/feeds/xoLNJ5ZwxVDYaRCl.xml', 'tag' => 'tech',    'label' => 'Inquirer Tech',  'category' => 'Tech & Innovation'],
+  ['url' => 'https://rss.app/feeds/jvx17FqERQHCjtka.xml', 'tag' => 'ph',      'label' => 'GMA News',              'category' => 'PH News'],
+  // Tech & Innovation → Interesting Engineering (rss.app feed)
+  ['url' => 'https://rss.app/feeds/xoLNJ5ZwxVDYaRCl.xml', 'tag' => 'tech',    'label' => 'InterestingEngineering','category' => 'Tech & Innovation'],
 ];
 
 /* ==========================================================
-   ORIGIN DETECTION (generic)
-   - CLI:   php build-feed.php --origin=https://your.site
-   - Envs:  SITE_ORIGIN, CF_PAGES_URL, PAGES_URL, NETLIFY_SITE_URL,
-            VERCEL_URL, RENDER_EXTERNAL_URL, RAILWAY_PUBLIC_DOMAIN,
-            GITHUB_PAGES_URL, PUBLIC_URL
-   If none found: skip <atom:link> and use a readable fallback link.
+   ORIGIN DETECTION
    ========================================================== */
 function arg_val($argv, $key) {
-  foreach ($argv as $a) {
-    if (str_starts_with($a, "--$key=")) return substr($a, strlen($key) + 3);
-  }
+  foreach ($argv as $a) if (str_starts_with($a, "--$key=")) return substr($a, strlen($key) + 3);
   return null;
 }
 function normalize_origin($s) {
   if (!$s) return '';
   $s = trim($s);
-  // If it looks like "my.site.com" add https://
   if (!preg_match('~^https?://~i', $s)) $s = 'https://' . $s;
   return rtrim($s, '/');
 }
 function detect_origin() {
   global $argv;
-  // CLI arg
   $cli = isset($argv) ? arg_val($argv, 'origin') : null;
   if ($cli) return normalize_origin($cli);
-
-  // Common env vars across hosts
   $candidates = [
     'SITE_ORIGIN',
-    'CF_PAGES_URL', 'PAGES_URL',          // Cloudflare Pages
-    'NETLIFY_SITE_URL',                   // Netlify
-    'VERCEL_URL',                         // Vercel (usually without scheme)
-    'RENDER_EXTERNAL_URL',                // Render
-    'RAILWAY_PUBLIC_DOMAIN',              // Railway
-    'GITHUB_PAGES_URL', 'PUBLIC_URL',     // GH Pages / general
+    'CF_PAGES_URL', 'PAGES_URL',           // Cloudflare Pages
+    'NETLIFY_SITE_URL',                    // Netlify
+    'VERCEL_URL',                          // Vercel
+    'RENDER_EXTERNAL_URL',                 // Render
+    'RAILWAY_PUBLIC_DOMAIN',               // Railway
+    'GITHUB_PAGES_URL', 'PUBLIC_URL',      // GH Pages / general
   ];
   foreach ($candidates as $k) {
     $v = getenv($k);
     if ($v) return normalize_origin($v);
   }
-  return ''; // unknown (still ok)
+  return '';
 }
-
 $ORIGIN = detect_origin();
-// Fallback for <channel><link> if origin unknown (valid absolute URL recommended)
-$CHANNEL_LINK_FALLBACK = 'https://example.com'; // change if you want
+$CHANNEL_LINK_FALLBACK = 'https://pinoytechfeed.pages.dev'; // update if you move domains
 
 /* =======================
    CHANNEL META
@@ -136,11 +120,9 @@ function extract_items($xml, $sourceUrl, $tag, $label, $categoryText) {
         $attrs = $itm->enclosure->attributes();
         if (isset($attrs['url'])) $img = (string)$attrs['url'];
       }
-      // sniff first <img> in description (last resort)
-      if (!$img && $desc) {
-        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $desc, $m)) {
-          $img = $m[1];
-        }
+      // sniff first <img> in description
+      if (!$img && $desc && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $desc, $m)) {
+        $img = $m[1];
       }
 
       $out[] = [
@@ -151,7 +133,7 @@ function extract_items($xml, $sourceUrl, $tag, $label, $categoryText) {
         'img'       => $img,
         'tag'       => $tag,
         'source'    => $label,
-        'category'  => $categoryText, // exact text for <category>
+        'category'  => $categoryText,
       ];
     }
   }
@@ -168,10 +150,9 @@ foreach ($SOURCES as $src) {
     if (!empty($it['link'])) $all[$it['link']] = $it; // de-dupe by link
   }
 }
-
 $items = array_values($all);
 usort($items, fn($a,$b) => $b['ts'] <=> $a['ts']);
-$items = array_slice($items, 0, 40); // keep latest N
+$items = array_slice($items, 0, 40);
 
 /* =======================
    Write RSS
@@ -182,7 +163,6 @@ $xml[] = '<?xml version="1.0" encoding="UTF-8"?>';
 $xml[] = '<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/" xmlns:atom="http://www.w3.org/2005/Atom">';
 $xml[] = '<channel>';
 
-// Self link only if we know our absolute origin
 if (!empty($ORIGIN)) {
   $xml[] = '<atom:link href="'.$ORIGIN.'/feed.xml" rel="self" type="application/rss+xml"/>';
 }
