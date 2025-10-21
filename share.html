@@ -113,12 +113,37 @@
     return { fb, tw, li };
   }
 
-  function catToTag(catText) {
-    const s = (catText || '').toLowerCase();
+  // Map <category> text to internal tag id
+  function categoryToTag(catText) {
+    const s = (catText || '').toLowerCase().trim();
     if (s.includes('gadgets')) return 'gadgets';
-    if (s.includes('ph')) return 'ph';
-    if (s.includes('tech')) return 'tech';
+    if (s.includes('ph')) return 'ph';                 // matches "ph news"
+    if (s.includes('tech')) return 'tech';             // matches "tech & innovation"
     return '';
+  }
+
+  // Fallback: infer tag from destination domain if no <category>
+  function domainToTag(link) {
+    try {
+      const u = new URL(link);
+      const host = u.hostname.toLowerCase();
+      const path = u.pathname.toLowerCase();
+      if (host.includes('gsmarena')) return 'gadgets'; // GSMArena → Gadgets
+      if (host.includes('gmanetwork')) return 'ph';    // GMA News → PH News
+      if (host.includes('inquirer') || path.includes('/technology') || path.includes('/tech')) return 'tech'; // Inquirer → Tech
+    } catch {}
+    return '';
+  }
+
+  function summarizeCounts(items) {
+    const c = { all: items.length, gadgets: 0, ph: 0, tech: 0, unknown: 0 };
+    for (const it of items) {
+      if (it.tag === 'gadgets') c.gadgets++;
+      else if (it.tag === 'ph') c.ph++;
+      else if (it.tag === 'tech') c.tech++;
+      else c.unknown++;
+    }
+    return `Loaded ${c.all} · Gadgets: ${c.gadgets} · PH: ${c.ph} · Tech: ${c.tech} · Unknown: ${c.unknown}`;
   }
 
   function render() {
@@ -204,8 +229,11 @@
           const enc   = chunk.match(/<enclosure[^>]*url=["']([^"']+)["']/i)?.[1];
           const mrss  = chunk.match(/<(?:media:content|content)[^>]*url=["']([^"']+)["']/i)?.[1];
           const img   = enc || mrss || '';
-          const tag   = catToTag(cat);
-          let source = pick('source') || 'Source';
+
+          // tag from category; fallback to domain
+          const tag   = categoryToTag(cat) || domainToTag(link);
+
+          let source = pick('source') || '';
           if (!source) { try { source = new URL(link).hostname.replace(/^www\./,''); } catch {} }
           return { title, link, date, img, tag, source };
         });
@@ -217,6 +245,7 @@
           const link  = get('link');
           const date  = get('pubDate');
           const cat   = get('category');
+
           let img = '';
           const enclosure = it.getElementsByTagName('enclosure')[0];
           if (enclosure && enclosure.getAttribute('url')) img = enclosure.getAttribute('url');
@@ -226,14 +255,17 @@
             const node = media1 || media2;
             if (node && node.getAttribute('url')) img = node.getAttribute('url');
           }
-          const tag = catToTag(cat);
-          let source = get('source') || 'Source';
+
+          // tag from category; fallback to domain
+          const tag = categoryToTag(cat) || domainToTag(link);
+
+          let source = get('source') || '';
           if (!source) { try { source = new URL(link).hostname.replace(/^www\./,''); } catch {} }
           return { title, link, date, img, tag, source };
         });
       }
 
-      showDebug(`Loaded ${items.length} items.`);
+      showDebug(summarizeCounts(items));
       render();
     } catch (err) {
       showDebug('Failed to load feed: ' + String(err));
