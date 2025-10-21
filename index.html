@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PinoyTechFeed · Gadgets & PH News</title>
+  <meta name="description" content="Latest gadget updates and Philippine news in one fast site. RSS-powered, ad-ready." />
+  <link rel="icon" href="/memory" />
+
+  <!-- Bootstrap 5 CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+  <!-- OPTIONAL: Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+    :root { --brand: #15803d; }
+    body { background: #0b1220; color: #e2e8f0; }
+    .navbar { backdrop-filter: blur(8px); background: rgba(10, 15, 25, .7)!important; }
+    .brand-grad { background: linear-gradient(90deg, #22c55e, #06b6d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .section-title { letter-spacing: .02em; color:white; !important;}
+    .card { background: #0f172a; border: 1px solid #1f2937; }
+    .card-header { background: #0b1220; border-bottom: 1px solid #1f2937; }
+    .badge-soft { background: rgba(34,197,94,.15); color: #86efac; border: 1px solid rgba(34,197,94,.25); }
+    .widget-frame { min-height: 520px; }
+    .ad-placeholder { background: repeating-linear-gradient(45deg, rgba(255,255,255,.06), rgba(255,255,255,.06) 10px, rgba(255,255,255,.1) 10px, rgba(255,255,255,.1) 20px); border: 1px dashed #64748b; color: #cbd5e1; }
+    .footer { border-top: 1px solid #1f2937; }
+    a { color: #7dd3fc; }
+    a:hover { color: #a5f3fc; }
+    .sticky-top-2 { position: sticky; top: 5rem; }
+  </style>
+
+  <link rel="preconnect" href="https://widget.rss.app">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+</head>
+
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#">
+        <i class="bi bi-cpu me-2 text-success"></i>
+        Pinoy<span class="brand-grad">TechFeed</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="nav">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="#gadgets">Gadgets</a></li>
+          <li class="nav-item"><a class="nav-link" href="#phnews">PH News</a></li>
+          <li class="nav-item"><a class="nav-link" href="#tech">Tech</a></li>
+          <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="py-5 mt-5">
+    <div class="container">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+          <h1 class="display-5 fw-bold">Latest <span class="brand-grad">Gadgets</span> & Philippine <span class="brand-grad">News</span> — in One Place</h1>
+          <p class="lead mt-3">Stay updated with the latest gadgets, tech trends, and Philippine headlines — fast, clean, and powered by live RSS feeds.</p>
+          <div class="d-flex gap-2 mt-2">
+            <a href="#gadgets" class="btn btn-success"><i class="bi bi-phone me-1"></i> See Gadget Updates</a>
+            <a href="#phnews" class="btn btn-outline-light"><i class="bi bi-newspaper me-1"></i> See PH Headlines</a>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <!-- 300x250 Ad: Adsterra script inserted below -->
+          <script type="text/javascript">
+	atOptions = {
+		'key' : '5686e68794cad010712c788ff04616c7',
+		'format' : 'iframe',
+		'height' : 250,
+		'width' : 300,
+		'params' : {}
+	};
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/5686e68794cad010712c788ff04616c7/invoke.js"></script>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="pb-5">
+    <div class="container">
+      <div class="row g-4">
+        <!-- LEFT COLUMN -->
+        <div class="col-lg-8">
+          <!-- Gadgets Section -->
+          <section id="gadgets" class="mb-4">
+            <div class="card shadow-sm">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="h5 m-0 section-title">📱 Gadget News</h2>
+                <span class="badge badge-soft">Auto • RSS</span>
+              </div>
+              <div class="card-body">
+                <rssapp-list id="f92kwVzjq4XUE6h3"></rssapp-list><script src="https://widget.rss.app/v1/list.js" type="text/javascript" async></script>
+              </div>
+            </div>
+          </section>
+
+          <!-- PH News Section -->
+          <section id="phnews" class="mb-4">
+            <div class="card shadow-sm">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="h5 m-0 section-title">🇵🇭 PH Headlines</h2>
+                <span class="badge badge-soft">Auto • RSS</span>
+              </div>
+              <div class="card-body">
+                <rssapp-feed id="jvx17FqERQHCjtka"></rssapp-feed><script src="https://widget.rss.app/v1/feed.js" type="text/javascript" async></script>
+              </div>
+            </div>
+          </section>
+
+          <!-- Tech & Innovation -->
+          <section id="tech" class="mb-4">
+            <div class="card shadow-sm">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="h5 m-0 section-title">💡 Tech & Innovation</h2>
+                <span class="badge badge-soft">Auto • RSS</span>
+              </div>
+              <div class="card-body">
+                <rssapp-imageboard id="ICCUIF4kF5MlzXJs"></rssapp-imageboard><script src="https://widget.rss.app/v1/imageboard.js" type="text/javascript" async></script>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- RIGHT SIDEBAR -->
+        <div class="col-lg-4">
+          <div class="sticky-top-2">
+            <!-- 300x600 Ad Placeholder -->
+            <!-- Adsterra 300x600 Sidebar Ad -->
+<script async="async" data-cfasync="false" src="//pl27886751.effectivegatecpm.com/f54538e1c2ec1a556506c61548cb0054/invoke.js"></script>
+<div id="container-f54538e1c2ec1a556506c61548cb0054"></div>
+
+
+            <div class="card shadow-sm mb-4">
+              <div class="card-header"><i class="bi bi-funnel me-2"></i>Quick Filters</div>
+              <div class="card-body">
+                <div class="d-grid gap-2">
+                  <a class="btn btn-outline-success btn-sm" href="#gadgets">Smartphones</a>
+                  <a class="btn btn-outline-success btn-sm" href="#gadgets">Laptops</a>
+                  <a class="btn btn-outline-success btn-sm" href="#tech">AI / Apps</a>
+                  <a class="btn btn-outline-success btn-sm" href="#phnews">National</a>
+                  <a class="btn btn-outline-success btn-sm" href="#phnews">Entertainment</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="card shadow-sm">
+              <div class="card-header"><i class="bi bi-envelope-open me-2"></i>Subscribe</div>
+              <div class="card-body">
+                <p class="small text-secondary">Get daily gadget & PH news in your inbox. (Hook up to Netlify Forms later.)</p>
+                <form name="subscribe" method="POST" data-netlify="true">
+                  <input type="hidden" name="form-name" value="subscribe" />
+                  <div class="mb-2">
+                    <label class="form-label visually-hidden" for="email">Email</label>
+                    <input class="form-control" id="email" name="email" type="email" placeholder="you@email.com" required>
+                  </div>
+                  <button class="btn btn-success w-100" type="submit">Subscribe</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ABOUT / FOOTER -->
+  <footer id="about" class="footer py-4">
+    <div class="container">
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-8">
+          <h3 class="h5 mb-2">About PinoyTechFeed</h3>
+          <p class="mb-0 text-secondary">Curating gadget updates and Philippine headlines from trusted sources via RSS. We respect original publishers — each headline links to the source site.</p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+          <a href="#" class="btn btn-outline-light btn-sm"><i class="bi bi-arrow-up"></i> Back to top</a>
+        </div>
+      </div>
+      <div class="mt-3 small text-secondary">© <span id="yr"></span> PinoyTechFeed by <a href="https://www.facebook.com/leginluap/">Paul Nigel S. Abalos</a> · Built with Bootstrap · Deployed on Netlify</div>
+    </div>
+  </footer>
+
+  <!-- FEED WIDGET SCRIPTS (FeedWind) -->
+  <!-- Replace the IDs with your actual FeedWind widget IDs -->
+
+  <!-- BOOTSTRAP JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+
+  <!-- Global Ad Script (moved for stability) -->
+  <script type='text/javascript' src='//pl27886731.effectivegatecpm.com/60/2a/ed/602aed825ecc89c7de4307c856981ce2.js'></script>
+</body>
+</html>
