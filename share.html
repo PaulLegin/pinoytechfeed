@@ -61,6 +61,7 @@
 
 <script>
 (function() {
+  // Use your merged feed
   const FEED_URL = '/feed.xml';
   const UTM_BASE = { utm_medium: 'social', utm_campaign: 'ptf_share' };
 
@@ -101,20 +102,19 @@
   }
 
   function toCaption(it, withHashtags = true) {
-    const url = it.share || it.link; // prefer share card
     const hash = withHashtags ? ` ${hashtagsFor(it.tag)}` : '';
-    const link = addUTM(url, 'facebook');
+    const link = addUTM(it.link, 'facebook');
     return `${it.title} — Read more: ${link}${hash}`;
   }
 
   function shareLinks(it) {
-    const url = it.share || it.link; // prefer share card
-    const fb = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(addUTM(url, 'facebook'));
-    const tw = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(it.title) + '&url=' + encodeURIComponent(addUTM(url, 'x'));
-    const li = 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(addUTM(url, 'linkedin'));
+    const fb = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(addUTM(it.link, 'facebook'));
+    const tw = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(it.title) + '&url=' + encodeURIComponent(addUTM(it.link, 'x'));
+    const li = 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(addUTM(it.link, 'linkedin'));
     return { fb, tw, li };
   }
 
+  // Category text → tag
   function categoryToTag(catText) {
     const s = (catText || '').toLowerCase().trim();
     if (s.includes('gadgets')) return 'gadgets';
@@ -123,6 +123,7 @@
     return '';
   }
 
+  // Domain inference when <category> is missing
   function domainToTag(link) {
     try {
       const u = new URL(link);
@@ -167,17 +168,33 @@
             <a class="btn" target="_blank" rel="noopener" href="${share.tw}">Share to X</a>
             <a class="btn" target="_blank" rel="noopener" href="${share.li}">Share to LinkedIn</a>
             <button class="btn" data-copy="${encodeURIComponent(toCaption(it))}">Copy caption</button>
+            <!-- NEW: copy the link (with UTM) to paste anywhere -->
+            <button class="btn" data-linkcopy="${encodeURIComponent(addUTM(it.link, 'facebook'))}">Copy site link</button>
           </div>
         </article>
       `);
     }
     listEl.innerHTML = rows.join('') || `<div class="meta">No items match your filter.</div>`;
 
+    // Copy caption
     [...listEl.querySelectorAll('button[data-copy]')].forEach(btn => {
       btn.addEventListener('click', async () => {
         const text = decodeURIComponent(btn.getAttribute('data-copy'));
         try { await navigator.clipboard.writeText(text); alert('Caption copied!'); }
         catch { prompt('Copy this:', text); }
+      });
+    });
+
+    // NEW: Copy link
+    [...listEl.querySelectorAll('button[data-linkcopy]')].forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const link = decodeURIComponent(btn.getAttribute('data-linkcopy'));
+        try {
+          await navigator.clipboard.writeText(link);
+          alert('✅ Site link copied! Paste it directly on Facebook, X, or LinkedIn.');
+        } catch {
+          prompt('Copy this link:', link);
+        }
       });
     });
   }
@@ -204,7 +221,7 @@
     catch { prompt('Copy these:', caps); }
   });
 
-  // Loader (XML + fallback)
+  // Load feed (XML + fallback)
   async function load() {
     try {
       const res = await fetch(FEED_URL, { cache: 'no-store' });
@@ -219,7 +236,7 @@
       if (!parseErr) nodes = Array.from(xml.getElementsByTagName('item'));
 
       if (parseErr || nodes.length === 0) {
-        // Fallback chunking
+        // Fallback: manual chunking
         const chunks = text.split(/<\/item>/i).filter(s => /<item>/i.test(s)).map(s => s + '</item>');
         items = chunks.map((chunk) => {
           const pick = (tag) => (chunk.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'))?.[1] || '').trim();
@@ -231,10 +248,9 @@
           const mrss  = chunk.match(/<(?:media:content|content)[^>]*url=["']([^"']+)["']/i)?.[1];
           const img   = enc || mrss || '';
           const tag   = categoryToTag(cat) || domainToTag(link);
-          const share = (chunk.match(/<ptf:share>([\s\S]*?)<\/ptf:share>/i)?.[1] || '').trim();
-          let source = (chunk.match(/<source>([\s\S]*?)<\/source>/i)?.[1] || '').trim();
+          let source = pick('source') || '';
           if (!source) { try { source = new URL(link).hostname.replace(/^www\./,''); } catch {} }
-          return { title, link, date, img, tag, source, share };
+          return { title, link, date, img, tag, source };
         });
       } else {
         // Normal XML path
@@ -244,7 +260,6 @@
           const link  = get('link');
           const date  = get('pubDate');
           const cat   = get('category');
-
           let img = '';
           const enclosure = it.getElementsByTagName('enclosure')[0];
           if (enclosure && enclosure.getAttribute('url')) img = enclosure.getAttribute('url');
@@ -254,12 +269,10 @@
             const node = media1 || media2;
             if (node && node.getAttribute('url')) img = node.getAttribute('url');
           }
-
-          const tag   = categoryToTag(cat) || domainToTag(link);
-          const share = get('ptf:share'); // read our custom share URL
+          const tag = categoryToTag(cat) || domainToTag(link);
           let source = get('source') || '';
           if (!source) { try { source = new URL(link).hostname.replace(/^www\./,''); } catch {} }
-          return { title, link, date, img, tag, source, share };
+          return { title, link, date, img, tag, source };
         });
       }
 
