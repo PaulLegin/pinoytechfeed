@@ -46,7 +46,7 @@
       <span class="tab active" data-filter="">All</span>
       <span class="tab" data-filter="gadgets">Gadgets</span>
       <span class="tab" data-filter="ph">PH News</span>
-      <span class="tab" data-filter="tech">Tech</span>
+      <span class="tab" data-filter="tech">Tech &amp; Innovation</span>
     </div>
     <input id="q" type="search" placeholder="Filter by title… (e.g., Samsung, iPhone, PAGCOR)" />
     <button class="btn" id="copyAll">Copy 3 latest captions</button>
@@ -76,25 +76,6 @@
   function showDebug(msg) {
     debugEl.style.display = 'block';
     debugEl.textContent = msg;
-  }
-
-  // --- Detect tab/category purely from destination domain/path ---
-  function detectTagFromLink(link) {
-    try {
-      const u = new URL(link);
-      const host = u.hostname.toLowerCase();
-      const path = u.pathname.toLowerCase();
-
-      if (host.includes('gsmarena')) return 'gadgets';           // Gadgets
-      if (host.includes('gmanetwork')) return 'ph';              // PH News
-      if (host.includes('inquirer') || path.includes('/technology') || path.includes('/tech')) return 'tech'; // Tech
-
-      // fallback heuristics
-      if (/(tech|ai|gadget|android|iphone|ios)/.test(path)) return 'tech';
-      return ''; // goes to All
-    } catch {
-      return '';
-    }
   }
 
   function addUTM(url, source) {
@@ -130,6 +111,14 @@
     const tw = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(it.title) + '&url=' + encodeURIComponent(addUTM(it.link, 'x'));
     const li = 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(addUTM(it.link, 'linkedin'));
     return { fb, tw, li };
+  }
+
+  function catToTag(catText) {
+    const s = (catText || '').toLowerCase();
+    if (s.includes('gadgets')) return 'gadgets';
+    if (s.includes('ph')) return 'ph';
+    if (s.includes('tech')) return 'tech';
+    return '';
   }
 
   function render() {
@@ -189,7 +178,7 @@
     catch { prompt('Copy these:', caps); }
   });
 
-  // -------- Robust loader with fallback --------
+  // Loader (XML + Safari-safe + fallback)
   async function load() {
     try {
       const res = await fetch(FEED_URL, { cache: 'no-store' });
@@ -202,30 +191,32 @@
 
       let nodes = [];
       if (!parseErr) nodes = Array.from(xml.getElementsByTagName('item'));
+
       if (parseErr || nodes.length === 0) {
-        showDebug('Note: Using fallback parser on this browser.');
-        // fallback chunking
+        // Fallback chunking
         const chunks = text.split(/<\/item>/i).filter(s => /<item>/i.test(s)).map(s => s + '</item>');
         items = chunks.map((chunk) => {
           const pick = (tag) => (chunk.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'))?.[1] || '').trim();
           const title = pick('title');
           const link  = pick('link');
           const date  = pick('pubDate');
+          const cat   = pick('category');
           const enc   = chunk.match(/<enclosure[^>]*url=["']([^"']+)["']/i)?.[1];
           const mrss  = chunk.match(/<(?:media:content|content)[^>]*url=["']([^"']+)["']/i)?.[1];
           const img   = enc || mrss || '';
-          const tag   = detectTagFromLink(link);
-          let source = 'Source';
-          try { source = new URL(link).hostname.replace(/^www\./,''); } catch {}
+          const tag   = catToTag(cat);
+          let source = pick('source') || 'Source';
+          if (!source) { try { source = new URL(link).hostname.replace(/^www\./,''); } catch {} }
           return { title, link, date, img, tag, source };
         });
       } else {
-        // normal XML path
+        // Normal XML path
         items = nodes.map((it) => {
           const get = (tag) => (it.getElementsByTagName(tag)[0]?.textContent || '').trim();
           const title = get('title') || '(no title)';
           const link  = get('link');
           const date  = get('pubDate');
+          const cat   = get('category');
           let img = '';
           const enclosure = it.getElementsByTagName('enclosure')[0];
           if (enclosure && enclosure.getAttribute('url')) img = enclosure.getAttribute('url');
@@ -235,9 +226,9 @@
             const node = media1 || media2;
             if (node && node.getAttribute('url')) img = node.getAttribute('url');
           }
-          const tag = detectTagFromLink(link);
-          let source = 'Source';
-          try { source = new URL(link).hostname.replace(/^www\./,''); } catch {}
+          const tag = catToTag(cat);
+          let source = get('source') || 'Source';
+          if (!source) { try { source = new URL(link).hostname.replace(/^www\./,''); } catch {} }
           return { title, link, date, img, tag, source };
         });
       }
