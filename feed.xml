@@ -1,332 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
-<channel>
-<title>PinoyTechFeed</title>
-<link>https://pinoytechfeed.netlify.app</link>
-<description>Latest gadget updates and Philippine tech news — curated by PinoyTechFeed.</description>
-<language>en</language>
-<lastBuildDate>Tue, 21 Oct 2025 16:39:28 +0800</lastBuildDate>
-<generator>PinoyTechFeed RSS Generator</generator>
-<item>
-<title>Marcos vows to continue cleansing gov't ranks despite being hard, painful</title>
-<link>https://www.gmanetwork.com/news/topstories/nation/963175/marcos-vows-to-continue-cleansing-gov-t-ranks-despite-being-hard-painful/story/</link>
-<description>While admitting that it is not an easy task, President Ferdinand ''Bongbong'' Marcos Jr. on Tuesday ensured that the government continues to cleanse its ranks.</description>
-<pubDate>Tue, 21 Oct 2025 15:55:54 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/nation/963175/marcos-vows-to-continue-cleansing-gov-t-ranks-despite-being-hard-painful/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/metrobank_most_outstanding_public_service_10-21-25_2025_10_21_15_25_37.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/metrobank_most_outstanding_public_service_10-21-25_2025_10_21_15_25_37.jpg" medium="image" />
-</item>
-<item>
-<title>2 rider, kritikal nang magsalpukan sa Phil-Am Road sa GenSan</title>
-<link>https://www.gmanetwork.com/news/balitambayan/promdi/963174/2-rider-kritikal-nang-magsalpukan-sa-phil-am-road-sa-gensan/story/</link>
-<description>Nasa kritikal na kondisyon ang dalawang rider matapos silang magkasalpukan sa Phil-Am Road, Barangay Tambler, General Santos City.</description>
-<pubDate>Tue, 21 Oct 2025 15:47:25 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/balitambayan/promdi/963174/2-rider-kritikal-nang-magsalpukan-sa-phil-am-road-sa-gensan/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/Untitled2_2025_10_21_15_46_53.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/Untitled2_2025_10_21_15_46_53.jpg" medium="image" />
-</item>
-<item>
-<title>Huawei Mate 70 Air listed online, design and key specs revealed</title>
-<link>https://www.gsmarena.com/huawei_mate_70_air_listed_online_design_and_key_specs_revealed-news-69988.php</link>
-<description>Huawei may add a new phone to last year’s Mate 70 lineup soon. A phone called the Mate 70 Air has been listed on the China Telecom website, which reveals its design and key specifications.
+<rss version="2.0"
+     xmlns:media="http://search.yahoo.com/mrss/"
+     xmlns:atom="http://www.w3.org/2005/Atom"
+     xmlns:ptf="https://pinoytechfeed.pages.dev/ns#">
+  <channel>
+    <title>PinoyTechFeed</title>
+    <link>https://pinoytechfeed.pages.dev</link>
+    <description>Latest gadget updates and Philippine tech news — curated by PinoyTechFeed.</description>
+    <language>en</language>
+    <lastBuildDate>Wed, 22 Oct 2025 12:00:00 +0800</lastBuildDate>
+    <generator>PinoyTechFeed RSS Generator</generator>
 
-The Huawei Mate 70 Air is expected to be a slim and lightweight phone set to compete with the recent influx of “Air” models from other brands.
+    <!-- Example #1 (PH News / GMA) -->
+    <item>
+      <title>Marcos vows to continue cleansing gov't ranks despite being hard, painful</title>
+      <link>https://pinoytechfeed.pages.dev/p/marcos-vows-to-continue.html</link>
+      <ptf:target>https://www.gmanetwork.com/news/topstories/nation/963175/marcos-vows-to-continue-cleansing-gov-t-ranks-despite-being-hard-painful/story/</ptf:target>
+      <description>President Ferdinand “Bongbong” Marcos Jr. on Tuesday ensured that the government continues to cleanse its ranks.</description>
+      <pubDate>Tue, 21 Oct 2025 15:55:54 +0800</pubDate>
+      <guid isPermaLink="true">https://pinoytechfeed.pages.dev/p/marcos-vows-to-continue.html</guid>
+      <category>PH News</category>
+      <source>GMA News</source>
+      <enclosure url="https://images.gmanews.tv/webpics/2025/10/metrobank_most_outstanding_public_service_10-21-25_2025_10_21_15_25_37.jpg" type="image/jpeg"/>
+      <media:content url="https://images.gmanews.tv/webpics/2025/10/metrobank_most_outstanding_public_service_10-21-25_2025_10_21_15_25_37.jpg" medium="image"/>
+    </item>
 
+    <!-- Example #2 (Gadgets / GSMArena) -->
+    <item>
+      <title>Huawei Mate 70 Air listed online, design and key specs revealed</title>
+      <link>https://pinoytechfeed.pages.dev/p/huawei-mate-70-air.html</link>
+      <ptf:target>https://www.gsmarena.com/huawei_mate_70_air_listed_online_design_and_key_specs_revealed-news-69988.php</ptf:target>
+      <description>Huawei may add a new phone to last year’s Mate 70 lineup soon...</description>
+      <pubDate>Tue, 21 Oct 2025 15:40:02 +0800</pubDate>
+      <guid isPermaLink="true">https://pinoytechfeed.pages.dev/p/huawei-mate-70-air.html</guid>
+      <category>Gadgets</category>
+      <source>GSMArena</source>
+      <enclosure url="https://fdn.gsmarena.com/imgroot/news/25/10/huawei-mate-70-air-china-telecom/-184x111/gsmarena_000.jpg" type="image/jpeg"/>
+      <media:content url="https://fdn.gsmarena.com/imgroot/news/25/10/huawei-mate-70-air-china-telecom/-184x111/gsmarena_000.jpg" medium="image"/>
+    </item>
 
+    <!-- Example #3 (Tech & Innovation / Interesting Engineering) -->
+    <item>
+      <title>SpaceX launches Starlink V3 satellites with upgraded propulsion system</title>
+      <link>https://pinoytechfeed.pages.dev/p/spacex-launches-starlink-v3.html</link>
+      <ptf:target>https://interestingengineering.com/innovation/spacex-launches-starlink-v3-satellites</ptf:target>
+      <description>SpaceX successfully deployed the first batch of Starlink V3 satellites featuring improved ion thrusters...</description>
+      <pubDate>Tue, 21 Oct 2025 14:20:00 +0800</pubDate>
+      <guid isPermaLink="true">https://pinoytechfeed.pages.dev/p/spacex-launches-starlink-v3.html</guid>
+      <category>Tech &amp; Innovation</category>
+      <source>Interesting Engineering</source>
+      <enclosure url="https://assets.interestingengineering.com/images/starlink-v3.jpg" type="image/jpeg"/>
+      <media:content url="https://assets.interestingengineering.com/images/starlink-v3.jpg" medium="image"/>
+    </item>
 
-It is listed on the China Telecom website with the model number SUP-AL90. The phone features a 6.9-inch display and runs HarmonyOS 5.
-
-
-
-The images show a phone with a circular rear camera module with three sensors, including a periscope telephoto unit....</description>
-<pubDate>Tue, 21 Oct 2025 15:40:02 +0800</pubDate>
-<guid isPermaLink="true">https://www.gsmarena.com/huawei_mate_70_air_listed_online_design_and_key_specs_revealed-news-69988.php</guid>
-<enclosure url="https://fdn.gsmarena.com/imgroot/news/25/10/huawei-mate-70-air-china-telecom/-184x111/gsmarena_000.jpg" type="image/jpeg" />
-<media:content url="https://fdn.gsmarena.com/imgroot/news/25/10/huawei-mate-70-air-china-telecom/-184x111/gsmarena_000.jpg" medium="image" />
-</item>
-<item>
-<title>Marcoleta grills DOJ over Discayas' state witness bid</title>
-<link>https://www.gmanetwork.com/news/topstories/nation/963172/marcoleta-grills-doj-over-discayas-state-witness-bid/story/</link>
-<description>Senator Rodante Marcoleta on Tuesday once again questioned the Department of Justice (DOJ) for insisting that contractors Sarah and Curlee Discaya should return illegally acquired wealth, if any, to the state coffers before they can be entered into the Witness Protection Program (WPP).</description>
-<pubDate>Tue, 21 Oct 2025 15:39:37 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/nation/963172/marcoleta-grills-doj-over-discayas-state-witness-bid/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/09/curlee_sarah_discaya_092525_2025_09_25_23_18_24.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/09/curlee_sarah_discaya_092525_2025_09_25_23_18_24.jpg" medium="image" />
-</item>
-<item>
-<title>Marcos: Metrobank awardees examples of goodness amid challenging times</title>
-<link>https://www.gmanetwork.com/news/topstories/nation/963171/marcos-metrobank-awardees-examples-of-goodness-amid-challenging-times/story/</link>
-<description>President Ferdinand “Bongbong” Marcos Jr. on Tuesday recognized the awardees of the 2025 Metrobank Foundation Outstanding Filipinos, saying that service wears many faces but is bound with the goal of serving communities and the country.</description>
-<pubDate>Tue, 21 Oct 2025 15:31:51 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/nation/963171/marcos-metrobank-awardees-examples-of-goodness-amid-challenging-times/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/metrobank_most_outstanding_public_service_10-21-25_2025_10_21_15_25_37.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/metrobank_most_outstanding_public_service_10-21-25_2025_10_21_15_25_37.jpg" medium="image" />
-</item>
-<item>
-<title>Bride, sumuong sa rumaragasang baha para ituloy ang kasal sa Iloilo</title>
-<link>https://www.gmanetwork.com/news/balitambayan/umg/963169/bride-sumuong-sa-rumaragasang-baha-para-ituloy-ang-kasal-sa-iloilo/story/</link>
-<description>Bride, sumuong sa rumaragasang baha para ituloy ang kasal sa Iloilo</description>
-<pubDate>Tue, 21 Oct 2025 15:29:26 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/balitambayan/umg/963169/bride-sumuong-sa-rumaragasang-baha-para-ituloy-ang-kasal-sa-iloilo/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/Screenshot_2025-10-21_at_3_2025_10_21_15_28_32.png" type="image/png" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/Screenshot_2025-10-21_at_3_2025_10_21_15_28_32.png" medium="image" />
-</item>
-<item>
-<title>Calapan Bishop-Emeritus Warlito Cajandig passes away at 81</title>
-<link>https://www.gmanetwork.com/news/topstories/regions/963168/calapan-bishop-emeritus-warlito-cajandig-dead-81/story/</link>
-<description>Retired Calapan Bishop Most Rev. Warlito Cajandig died on Tuesday at the age of 81, the Apostolic Vicariate of Calapan said.</description>
-<pubDate>Tue, 21 Oct 2025 15:29:11 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/regions/963168/calapan-bishop-emeritus-warlito-cajandig-dead-81/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/41903782_10213651001612874_6287173574008504320_n_2025_10_21_15_19_05.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/41903782_10213651001612874_6287173574008504320_n_2025_10_21_15_19_05.jpg" medium="image" />
-</item>
-<item>
-<title>PM Sanae Takaichi, a heavy metal drummer, is Japan's Iron Lady 2.0</title>
-<link>https://www.gmanetwork.com/news/topstories/world/963161/pm-sanae-takaichi-a-heavy-metal-drummer-is-japan-s-iron-lady-2-0/story/</link>
-<description>TOKYO, Japan -- Sanae Takaichi, a staunch conservative who admires Margaret Thatcher, became Japan's first woman prime minister on Tuesday, but analysts say her rise does not necessarily signal a feminist victory.</description>
-<pubDate>Tue, 21 Oct 2025 15:10:13 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/world/963161/pm-sanae-takaichi-a-heavy-metal-drummer-is-japan-s-iron-lady-2-0/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/japan_pm_takaichi_2025_10_21_14_36_00.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/japan_pm_takaichi_2025_10_21_14_36_00.jpg" medium="image" />
-</item>
-<item>
-<title>PAGCOR, NPC ink accord to bolster data privacy protection in gaming sector</title>
-<link>https://www.gmanetwork.com/news/topstories/nation/963164/pagcor-npc-ink-accord-to-bolster-data-privacy-protection-in-gaming-sector/story/</link>
-<description>The Philippine Amusement and Gaming Corporation (PAGCOR) and the National Privacy Commission (NPC) have forged a partnership aimed at bolstering data privacy protection and ensuring regulatory compliance across the country"s gaming sector.</description>
-<pubDate>Tue, 21 Oct 2025 14:41:52 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/nation/963164/pagcor-npc-ink-accord-to-bolster-data-privacy-protection-in-gaming-sector/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/pagcor-npc_2025_10_21_14_38_27.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/pagcor-npc_2025_10_21_14_38_27.jpg" medium="image" />
-</item>
-<item>
-<title>Hardliner Takaichi elected as Japanese premier, shattering glass ceiling</title>
-<link>https://www.gmanetwork.com/news/topstories/world/963159/hardliner-takaichi-elected-as-japanese-premier-shattering-glass-ceiling/story/</link>
-<description>TOKYO - Hardline conservative Sanae Takaichi was elected Japan's first female prime minister on Tuesday, shattering the nation's glass ceiling and setting it up for a forceful turn to the right.</description>
-<pubDate>Tue, 21 Oct 2025 14:13:39 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/world/963159/hardliner-takaichi-elected-as-japanese-premier-shattering-glass-ceiling/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/New_Japan_PM_Sanae_Takaichi_2025_10_21_14_12_56.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/New_Japan_PM_Sanae_Takaichi_2025_10_21_14_12_56.jpg" medium="image" />
-</item>
-<item>
-<title>Missing sabungeros murder complaint submitted for reso -- DOJ</title>
-<link>https://www.gmanetwork.com/news/topstories/nation/963157/missing-sabungeros-murder-complaint-submitted-for-reso-doj/story/</link>
-<description>The murder complaint filed against businessman Charlie “Atong” Ang and other individuals over the missing sabungeros has been submitted for resolution, a prosecutor of the Department of Justice (DOJ) said Tuesday.</description>
-<pubDate>Tue, 21 Oct 2025 14:03:27 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/nation/963157/missing-sabungeros-murder-complaint-submitted-for-reso-doj/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2024/10/missing_poster_sabungeros_10-2-24_2024_10_01_22_25_25.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2024/10/missing_poster_sabungeros_10-2-24_2024_10_01_22_25_25.jpg" medium="image" />
-</item>
-<item>
-<title>BI: 2 foreign fugitives arrested in Olongapo, Cagayan de Oro</title>
-<link>https://www.gmanetwork.com/news/topstories/regions/963154/bi-2-foreign-fugitives-arrested-in-olongapo-cagayan-de-oro/story/</link>
-<description>Operatives of the Bureau of Immigration (BI) nabbed two foreign fugitives in separate arrests in Olongapo and Cagayan de Oro City.</description>
-<pubDate>Tue, 21 Oct 2025 13:50:23 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/regions/963154/bi-2-foreign-fugitives-arrested-in-olongapo-cagayan-de-oro/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/BI_fugitives_japanese_nigerian_2025_10_21_13_49_32.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/BI_fugitives_japanese_nigerian_2025_10_21_13_49_32.jpg" medium="image" />
-</item>
-<item>
-<title>Ex-DOH chief Garin urges gov't: Provide free face masks for Undas 2025 exodus</title>
-<link>https://www.gmanetwork.com/news/topstories/nation/963152/ex-doh-chief-garin-urges-gov-t-provide-free-face-masks-for-undas-2025-exodus/story/</link>
-<description>As thousands of travelers are expected to take public transportation and visit cemeteries for All Saints' Day and All Souls' Day, House Deputy Speaker and former health secretary Janette Garin on Tuesday called on the government to provide free face masks and vaccines to the public.</description>
-<pubDate>Tue, 21 Oct 2025 13:43:57 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/nation/963152/ex-doh-chief-garin-urges-gov-t-provide-free-face-masks-for-undas-2025-exodus/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2024/10/rep_janette_garin_2024_10_10_18_52_57.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2024/10/rep_janette_garin_2024_10_10_18_52_57.jpg" medium="image" />
-</item>
-<item>
-<title>Bong Go on Trillanes complaint: 'Culprits should be held liable"</title>
-<link>https://www.gmanetwork.com/news/topstories/nation/963151/bong-go-on-trillanes-complaint-culprits-should-be-held-liable/story/</link>
-<description>Senator Bong Go on Tuesday urged former senator Antonio Trillanes IV to not deviate from the truth as he insisted that the real perpetrators behind the anomalous flood control projects should be held accountable.</description>
-<pubDate>Tue, 21 Oct 2025 13:31:32 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/nation/963151/bong-go-on-trillanes-complaint-culprits-should-be-held-liable/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/IMG_7176_2025_10_21_13_28_32.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/IMG_7176_2025_10_21_13_28_32.jpg" medium="image" />
-</item>
-<item>
-<title>The latest iOS 26.1 beta lets you tone down the Liquid Glass</title>
-<link>https://www.gsmarena.com/the_latest_ios_261_beta_lets_you_tone_down_the_liquid_glass-news-69987.php</link>
-<description>iOS 26 launched last month with a huge redesign and the Liquid Glass UI, which has seen mixed reviews. While it is undoubtedly fresher-looking than iOS' previous UI, it's also definitely giving Windows Vista. Oh, and some people find that it has way too much transparency, which can impede usability.
-
-Apple has toned down the transparency since the first iOS 26 beta came out, so it's less in the final release than the company was initially planning. But if it's still too much for you, the upcoming iOS 26.1 will help. In the latest beta of this release, which went out today, there's a toggle...</description>
-<pubDate>Tue, 21 Oct 2025 13:09:02 +0800</pubDate>
-<guid isPermaLink="true">https://www.gsmarena.com/the_latest_ios_261_beta_lets_you_tone_down_the_liquid_glass-news-69987.php</guid>
-<enclosure url="https://fdn.gsmarena.com/imgroot/news/25/10/ios-26-1-transparency-toggle/-184x111/gsmarena_000.jpg" type="image/jpeg" />
-<media:content url="https://fdn.gsmarena.com/imgroot/news/25/10/ios-26-1-transparency-toggle/-184x111/gsmarena_000.jpg" medium="image" />
-</item>
-<item>
-<title>DPWH: Only 22 PH classrooms finished so far in 2025</title>
-<link>https://www.gmanetwork.com/news/topstories/nation/963146/dpwh-only-22-ph-classrooms-finished-so-far-in-2025/story/</link>
-<description>Out of the 1,700 classrooms targeted to be built this year, only 22 classrooms have been finished so far by the Department of Public Works and Highways (DPWH).</description>
-<pubDate>Tue, 21 Oct 2025 12:18:09 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/nation/963146/dpwh-only-22-ph-classrooms-finished-so-far-in-2025/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/02/empty_classroom_2025_02_20_01_30_13.GIF" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/02/empty_classroom_2025_02_20_01_30_13.GIF" medium="image" />
-</item>
-<item>
-<title>Comelec: 31K registrants in first day of 2026 BSKE, SRAP registration</title>
-<link>https://www.gmanetwork.com/news/topstories/nation/963145/comelec-31k-registrants-in-first-day-of-2026-bske-srap-registration/story/</link>
-<description>The Commission on Elections (Comelec) on Tuesday reported that over 31,000 people participated in the resumption of the voter registration period for the 2026 Barangay and Sangguniang Kabataan elections (BSKE) in Metro Manila and Special Register Anywhere Program (SRAP).</description>
-<pubDate>Tue, 21 Oct 2025 12:11:31 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/nation/963145/comelec-31k-registrants-in-first-day-of-2026-bske-srap-registration/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/voterregistration_2025_10_20_13_16_35.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/voterregistration_2025_10_20_13_16_35.jpg" medium="image" />
-</item>
-<item>
-<title>Here's the global Oppo Find X9 and Find X9 Pro's battery capacity</title>
-<link>https://www.gsmarena.com/heres_the_global_oppo_find_x9_and_find_x9_pros_battery_capacity-news-69986.php</link>
-<description>Oppo launched the Find X9 and Find X9 Pro in China last week, and the two will be going global on October 28. Ahead of that, you may have been anxious about the global models' battery capacities, since a lot of times the huge batteries that are available in China shrink on their way to other markets (especially Europe).
-
-Well, fret not for this will not be the case for Oppo's new flagships. According to the devices' EU Energy Labels, they have the same battery capacities as in China. In fact, according to a tipster over on X, their full spec sheets will be unchanged.
-
-
-
-
-Oppo Find X9...</description>
-<pubDate>Tue, 21 Oct 2025 12:08:02 +0800</pubDate>
-<guid isPermaLink="true">https://www.gsmarena.com/heres_the_global_oppo_find_x9_and_find_x9_pros_battery_capacity-news-69986.php</guid>
-<enclosure url="https://fdn.gsmarena.com/imgroot/news/25/10/oppo-find-x9-find-x9-pro-global-battery/-184x111/gsmarena_000.jpg" type="image/jpeg" />
-<media:content url="https://fdn.gsmarena.com/imgroot/news/25/10/oppo-find-x9-find-x9-pro-global-battery/-184x111/gsmarena_000.jpg" medium="image" />
-</item>
-<item>
-<title>Trillanes sues ex-Pres. Duterte, Bong Go for plunder, graft</title>
-<link>https://www.gmanetwork.com/news/topstories/nation/963144/trillanes-ex-pres-duterte-bong-go-plunder-graft/story/</link>
-<description>Former senator Antonio Trillanes IV on Tuesday filed with the Office of the Ombudsman plunder and graft complaints against former President Rodrigo Duterte and Senator Christopher "Bong" Go.</description>
-<pubDate>Tue, 21 Oct 2025 11:58:27 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/nation/963144/trillanes-ex-pres-duterte-bong-go-plunder-graft/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/trillanes_2025_10_21_11_49_17.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/trillanes_2025_10_21_11_49_17.jpg" medium="image" />
-</item>
-<item>
-<title>DBM OKs release of P783.28M for performance bonus of Navy, PAF, NICA personnel</title>
-<link>https://www.gmanetwork.com/news/topstories/nation/963141/dbm-oks-release-performance-bonus-of-navy-paf-nica-personnel/story/</link>
-<description>The Department of Budget and Management (DBM) on Tuesday announced it has approved the release of nearly P800 million for the 2023 Performance-Based Bonuses (PBB) of qualified members of the Philippine Navy (PN), Philippine Air Force (PAF), and National Intelligence Coordinating Agency (NICA).</description>
-<pubDate>Tue, 21 Oct 2025 11:22:36 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/nation/963141/dbm-oks-release-performance-bonus-of-navy-paf-nica-personnel/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2024/02/BRP_Emilio_Jacinto_PS-35_deployed_to_Palawan_2-14-24_2024_02_15_00_47_19.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2024/02/BRP_Emilio_Jacinto_PS-35_deployed_to_Palawan_2-14-24_2024_02_15_00_47_19.jpg" medium="image" />
-</item>
-<item>
-<title>Dizon OK with further DPWH budget cuts: 'Para masiguro na hindi mananakaw"</title>
-<link>https://www.gmanetwork.com/news/topstories/nation/963139/dizon-ok-with-further-dpwh-budget-cuts-para-masiguro-na-hindi-mananakaw/story/</link>
-<description>Public Works and Highways Secretary Vince Dizon on Tuesday said he is all right with the 2026 budget of the DPWH potentially getting trimmed down further in a bid to curb corruption in the agency.</description>
-<pubDate>Tue, 21 Oct 2025 11:06:45 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/nation/963139/dizon-ok-with-further-dpwh-budget-cuts-para-masiguro-na-hindi-mananakaw/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/dpwh_sec_vince_dizon_101625_2025_10_16_17_53_28.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/dpwh_sec_vince_dizon_101625_2025_10_16_17_53_28.jpg" medium="image" />
-</item>
-<item>
-<title>vivo X300 Pro in for review</title>
-<link>https://www.gsmarena.com/vivo_x300_pro_in_for_review-news-69983.php</link>
-<description>We had the chance to handle the vivo X300 Pro at the launch of the X300 series in China, but the phone is now at the office and in for a proper review.
-
-We can also put it side by side with its predecessor, which reveals a few differences. Most notably, the new phone is  smaller in all dimensions.
-
-
-
-
-The vivo X300 Pro, right, and the X200 Pro on the right
-
-A key difference is in the displays. The X300 Pro has a flat-edged screen, whereas the X200 Pro has a slight curve to its display. The vivo faithfuls here at HQ are unsure whether they like their old, slightly curved screen or the...</description>
-<pubDate>Tue, 21 Oct 2025 11:04:02 +0800</pubDate>
-<guid isPermaLink="true">https://www.gsmarena.com/vivo_x300_pro_in_for_review-news-69983.php</guid>
-<enclosure url="https://fdn.gsmarena.com/imgroot/news/25/10/vivo-x300-pro-ifr/-184x111/gsmarena_000.jpg" type="image/jpeg" />
-<media:content url="https://fdn.gsmarena.com/imgroot/news/25/10/vivo-x300-pro-ifr/-184x111/gsmarena_000.jpg" medium="image" />
-</item>
-<item>
-<title>Massive flooding in Western Visayas affects over 32,000 families</title>
-<link>https://www.gmanetwork.com/news/topstories/regions/963137/massive-flooding-in-western-visayas-affects-over-32-000-families/story/</link>
-<description>Massive flooding in Western Visayas on October 18, 2025 has affected over 32,000 families, or at least 116,000 individuals.</description>
-<pubDate>Tue, 21 Oct 2025 10:56:10 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/regions/963137/massive-flooding-in-western-visayas-affects-over-32-000-families/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/flood_2025_10_21_10_47_45.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/flood_2025_10_21_10_47_45.jpg" medium="image" />
-</item>
-<item>
-<title>With one RFID all tollways project, Marcos vows easy travel for Pinoys</title>
-<link>https://www.gmanetwork.com/news/topstories/nation/963135/with-one-rfid-all-tollways-project-marcos-vows-easy-travel-for-pinoys/story/</link>
-<description>President Ferdinand ''Bongbong'' Marcos Jr. on Tuesday highlighted the government's commitment to ensuring a smooth travel for travelers as the administration launches the Toll Collection System Interoperability Project, which is dubbed as ''One RFID, All Tollways.''</description>
-<pubDate>Tue, 21 Oct 2025 10:28:42 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/nation/963135/with-one-rfid-all-tollways-project-marcos-vows-easy-travel-for-pinoys/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/1_2025_10_21_10_26_34.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/1_2025_10_21_10_26_34.jpg" medium="image" />
-</item>
-<item>
-<title>Ask Atty. Gaby: Nang-ararong UV Express</title>
-<link>https://www.gmanetwork.com/news/topstories/opinion/963128/ask-atty-gaby-nang-ararong-uv-express/story/</link>
-<description>Atty., negatibo raw ang driver sa pag-inom ng alcohol pero ang driver umamin sa Department of Transportation na may ininom siyang illegal substance bago ang trahedya. Ano ba ang sinasabi ng batas tungkol dito at ano ang habol ng mga biktima?</description>
-<pubDate>Tue, 21 Oct 2025 10:06:01 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/opinion/963128/ask-atty-gaby-nang-ararong-uv-express/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/AskAttyGaby_2025_10_21_09_51_41.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/AskAttyGaby_2025_10_21_09_51_41.jpg" medium="image" />
-</item>
-<item>
-<title>Palace on probing VP Sara"s use of confi funds: Up to Ombudsman</title>
-<link>https://www.gmanetwork.com/news/topstories/nation/963131/palace-on-probing-vp-sara-s-use-of-confi-funds-up-to-ombudsman/story/</link>
-<description>Malacañang on Tuesday said it is up to the Office of the Ombudsman to investigate Vice President Sara Duterte's use of confidential funds from her office from 2022 to 2023.</description>
-<pubDate>Tue, 21 Oct 2025 10:02:40 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/nation/963131/palace-on-probing-vp-sara-s-use-of-confi-funds-up-to-ombudsman/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/05/castro_2025_05_05_14_43_14.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/05/castro_2025_05_05_14_43_14.jpg" medium="image" />
-</item>
-<item>
-<title>Redmi reveals the K90 Pro Max's key features, gigantic battery included</title>
-<link>https://www.gsmarena.com/redmi_reveals_the_k90_pro_maxs_key_features_gigantic_battery_included-news-69985.php</link>
-<description>Redmi is making the K90 Pro Max official on October 23, and ahead of that it showed us the phone's design a few days ago. Today, the brand has decided to also reveal its key specs.
-
-Let's start with the battery, because it's massive: 7,560 mAh. It supports 100W wired, 50W wireless, and 22.5W reverse wired charging, and is even advertised to be fully compatible with 100W PPS chargers.
-
-
-
-
-
-
-
-Redmi K90 Pro Max key specs teasers
-
-At the helm sits Qualcomm's Snapdragon 8 Elite Gen 5, paired with a new "AI independent display chip" D2. The SoC is cooled by Xiaomi's largest vapor...</description>
-<pubDate>Tue, 21 Oct 2025 09:03:02 +0800</pubDate>
-<guid isPermaLink="true">https://www.gsmarena.com/redmi_reveals_the_k90_pro_maxs_key_features_gigantic_battery_included-news-69985.php</guid>
-<enclosure url="https://fdn.gsmarena.com/imgroot/news/25/10/redmi-k90-pro-max-key-specs/-184x111/gsmarena_000.jpg" type="image/jpeg" />
-<media:content url="https://fdn.gsmarena.com/imgroot/news/25/10/redmi-k90-pro-max-key-specs/-184x111/gsmarena_000.jpg" medium="image" />
-</item>
-<item>
-<title>Floating bag with illegal drugs recovered from West Philippine Sea</title>
-<link>https://www.gmanetwork.com/news/topstories/regions/963124/floating-bag-with-illegal-drugs-recovered-from-west-philippine-sea/story/</link>
-<description>A bag found floating in the waters near Sabina Shoal in the West Philippine Sea on Saturday yielded suspected illegal drugs, the Philippine Navy said.</description>
-<pubDate>Tue, 21 Oct 2025 07:59:44 +0800</pubDate>
-<guid isPermaLink="true">https://www.gmanetwork.com/news/topstories/regions/963124/floating-bag-with-illegal-drugs-recovered-from-west-philippine-sea/story/</guid>
-<enclosure url="https://images.gmanews.tv/webpics/2025/10/illegaldrugs_2025_10_21_07_28_55.jpg" type="image/jpeg" />
-<media:content url="https://images.gmanews.tv/webpics/2025/10/illegaldrugs_2025_10_21_07_28_55.jpg" medium="image" />
-</item>
-<item>
-<title>Here's when the Huawei Mate 80 series is rumored to launch</title>
-<link>https://www.gsmarena.com/heres_when_the_huawei_mate_80_series_is_rumored_to_launch-news-69984.php</link>
-<description>Huawei's Mate 80 series could be announced as soon as November, according to a new rumor from Digital Chat Station on Weibo. That may still change and the launch could slip into December, but for now November seems to be the plan.
-
-The Mate 80 will allegedly be available in black, white, and turquoise. Interestingly, the Mate 80 phones will be joined at their launch event by a "2-in-1 tablet", though it's not clear at all what that means.
-
-
-Leaked Huawei Mate 80 image
-
-Regardless, this mystery device will be offered in Moonlight Silver and Space Gray. A previous rumor told us to expect...</description>
-<pubDate>Tue, 21 Oct 2025 07:02:02 +0800</pubDate>
-<guid isPermaLink="true">https://www.gsmarena.com/heres_when_the_huawei_mate_80_series_is_rumored_to_launch-news-69984.php</guid>
-<enclosure url="https://fdn.gsmarena.com/imgroot/news/25/10/huawei-mate-80-series-launch-timeframe/-184x111/gsmarena_000.jpg" type="image/jpeg" />
-<media:content url="https://fdn.gsmarena.com/imgroot/news/25/10/huawei-mate-80-series-launch-timeframe/-184x111/gsmarena_000.jpg" medium="image" />
-</item>
-<item>
-<title>Xiaomi 17 Pro Max in for review</title>
-<link>https://www.gsmarena.com/xiaomi_17_pro_max_in_for_review-news-69982.php</link>
-<description>The iPhone 17 Pro Max had just about 1 month of being able to call itself the best Pro Max around! The Xiaomi 17 Pro Max may be a corny namestealer, but it's about as serious on the specs front as you can get.
-
-What immediately grabs the attention is the rear screen, so let's talk about it. It's absolutely top notch - a 120 Hz LTPO OLED panel  with a peak brightness of 3,500 nits.
-
-On the software side, the rear screen isn't very useful. It technically supports third-party apps, but only Chinese ones are allowed for now. Hardly surprising, since the phone is only available in China and...</description>
-<pubDate>Tue, 21 Oct 2025 05:03:02 +0800</pubDate>
-<guid isPermaLink="true">https://www.gsmarena.com/xiaomi_17_pro_max_in_for_review-news-69982.php</guid>
-<enclosure url="https://fdn.gsmarena.com/imgroot/news/25/10/xioami-17-pro-max-ifr/-184x111/gsmarena_000.jpg" type="image/jpeg" />
-<media:content url="https://fdn.gsmarena.com/imgroot/news/25/10/xioami-17-pro-max-ifr/-184x111/gsmarena_000.jpg" medium="image" />
-</item>
-</channel>
+  </channel>
 </rss>
