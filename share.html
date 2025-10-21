@@ -126,35 +126,24 @@
     return '';
   }
 
-  function domainToTag(link) {
-    try {
-      const u = new URL(link);
-      const host = u.hostname.toLowerCase();
-      const path = u.pathname.toLowerCase();
+  // Fallback: infer tag from destination domain if no <category>
+function domainToTag(link) {
+  try {
+    const u = new URL(link);
+    const host = u.hostname.toLowerCase();
+    const path = u.pathname.toLowerCase();
 
-      // Gadgets
-      if (host.includes('gsmarena')) return 'gadgets';
+    if (host.includes('gsmarena')) return 'gadgets';      // GSMArena → Gadgets
+    if (host.includes('gmanetwork')) return 'ph';         // GMA → PH News
 
-      // PH News
-      if (host.includes('gmanetwork') || host.includes('gmanews')) return 'ph';
-
-      // Tech & Innovation (add more as needed)
-      if (
-        host.includes('interestingengineering') ||
-        host.includes('techcrunch') ||
-        host.includes('cointelegraph') ||
-        host.includes('decrypt.co') ||
-        host.includes('theverge') ||
-        host.includes('wired') ||
-        host.includes('engadget') ||
-        host.includes('arstechnica')
-      ) return 'tech';
-
-      if (path.includes('/technology') || path.includes('/tech') || path.includes('/ai')) return 'tech';
-    } catch {}
-    return '';
-  }
-
+    // Tech & Innovation sources/paths
+    if (host.includes('interestingengineering')) return 'tech'; // IE → Tech
+    if (host.includes('inquirer')) return 'tech';
+    if (path.includes('/technology') || path.includes('/tech') || path.includes('/innovation'))
+      return 'tech';
+  } catch {}
+  return '';
+}
   function summarizeCounts(items) {
     const c = { all: items.length, gadgets: 0, ph: 0, tech: 0, unknown: 0 };
     for (const it of items) {
