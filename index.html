@@ -5,12 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PinoyTechFeed · Gadgets & PH News</title>
   <meta name="description" content="Latest gadget updates and Philippine news in one fast site. RSS-powered, ad-ready." />
-  <link rel="icon" href="/memory" />
 
-  <!-- Bootstrap 5 CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <!-- Canonical + robots -->
+  <link rel="canonical" href="https://pinoytechfeed.netlify.app/" />
+  <meta name="robots" content="index,follow" />
 
-  <!-- OPTIONAL: Icons -->
+  <!-- Favicon -->
+  <link rel="icon" href="/favicon.ico" />
+
+  <!-- Expose your RSS feed (dlvr.it will use this URL) -->
+  <link rel="alternate" type="application/rss+xml" title="PinoyTechFeed RSS" href="/feed.xml" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:title" content="PinoyTechFeed · Gadgets & PH News" />
+  <meta property="og:description" content="Stay updated with the latest gadgets, tech trends, and Philippine headlines — fast, clean, and powered by live RSS feeds." />
+  <meta property="og:url" content="https://pinoytechfeed.netlify.app/" />
+  <meta property="og:image" content="https://pinoytechfeed.netlify.app/thumbnail.jpg" />
+  <meta property="og:type" content="website" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PinoyTechFeed · Gadgets & PH News" />
+  <meta name="twitter:description" content="Stay updated with the latest gadgets, tech trends, and Philippine headlines — fast, clean, and powered by live RSS feeds." />
+  <meta name="twitter:image" content="https://pinoytechfeed.netlify.app/thumbnail.jpg" />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "NewsMediaOrganization",
+    "name": "PinoyTechFeed",
+    "url": "https://pinoytechfeed.netlify.app/",
+    "logo": "https://pinoytechfeed.netlify.app/logo.png",
+    "sameAs": ["https://www.facebook.com/leginluap/"]
+  }
+  </script>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
   <style>
@@ -18,12 +50,11 @@
     body { background: #0b1220; color: #e2e8f0; }
     .navbar { backdrop-filter: blur(8px); background: rgba(10, 15, 25, .7)!important; }
     .brand-grad { background: linear-gradient(90deg, #22c55e, #06b6d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .section-title { letter-spacing: .02em; color:white; !important;}
+    .section-title { letter-spacing: .02em; color:white; }
     .card { background: #0f172a; border: 1px solid #1f2937; }
     .card-header { background: #0b1220; border-bottom: 1px solid #1f2937; }
     .badge-soft { background: rgba(34,197,94,.15); color: #86efac; border: 1px solid rgba(34,197,94,.25); }
     .widget-frame { min-height: 520px; }
-    .ad-placeholder { background: repeating-linear-gradient(45deg, rgba(255,255,255,.06), rgba(255,255,255,.06) 10px, rgba(255,255,255,.1) 10px, rgba(255,255,255,.1) 20px); border: 1px dashed #64748b; color: #cbd5e1; }
     .footer { border-top: 1px solid #1f2937; }
     a { color: #7dd3fc; }
     a:hover { color: #a5f3fc; }
@@ -35,6 +66,12 @@
 </head>
 
 <body>
+  <noscript>
+    <div class="alert alert-warning text-center m-0" role="alert">
+      This site uses JavaScript to load live RSS widgets. Please enable JavaScript to view the latest updates.
+    </div>
+  </noscript>
+
   <!-- NAVBAR -->
   <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
     <div class="container">
@@ -69,17 +106,11 @@
           </div>
         </div>
         <div class="col-lg-4">
-          <!-- 300x250 Ad: Adsterra script inserted below -->
+          <!-- Ad script -->
           <script type="text/javascript">
-	atOptions = {
-		'key' : '5686e68794cad010712c788ff04616c7',
-		'format' : 'iframe',
-		'height' : 250,
-		'width' : 300,
-		'params' : {}
-	};
-</script>
-<script type="text/javascript" src="//www.highperformanceformat.com/5686e68794cad010712c788ff04616c7/invoke.js"></script>
+            atOptions = { 'key': '5686e68794cad010712c788ff04616c7', 'format': 'iframe', 'height': 250, 'width': 300, 'params': {} };
+          </script>
+          <script async src="//www.highperformanceformat.com/5686e68794cad010712c788ff04616c7/invoke.js"></script>
         </div>
       </div>
     </div>
@@ -89,9 +120,7 @@
   <main class="pb-5">
     <div class="container">
       <div class="row g-4">
-        <!-- LEFT COLUMN -->
         <div class="col-lg-8">
-          <!-- Gadgets Section -->
           <section id="gadgets" class="mb-4">
             <div class="card shadow-sm">
               <div class="card-header d-flex justify-content-between align-items-center">
@@ -99,12 +128,12 @@
                 <span class="badge badge-soft">Auto • RSS</span>
               </div>
               <div class="card-body">
-                <rssapp-list id="f92kwVzjq4XUE6h3"></rssapp-list><script src="https://widget.rss.app/v1/list.js" type="text/javascript" async></script>
+                <rssapp-list id="f92kwVzjq4XUE6h3"></rssapp-list>
+                <script src="https://widget.rss.app/v1/list.js" async></script>
               </div>
             </div>
           </section>
 
-          <!-- PH News Section -->
           <section id="phnews" class="mb-4">
             <div class="card shadow-sm">
               <div class="card-header d-flex justify-content-between align-items-center">
@@ -112,12 +141,12 @@
                 <span class="badge badge-soft">Auto • RSS</span>
               </div>
               <div class="card-body">
-                <rssapp-feed id="jvx17FqERQHCjtka"></rssapp-feed><script src="https://widget.rss.app/v1/feed.js" type="text/javascript" async></script>
+                <rssapp-feed id="jvx17FqERQHCjtka"></rssapp-feed>
+                <script src="https://widget.rss.app/v1/feed.js" async></script>
               </div>
             </div>
           </section>
 
-          <!-- Tech & Innovation -->
           <section id="tech" class="mb-4">
             <div class="card shadow-sm">
               <div class="card-header d-flex justify-content-between align-items-center">
@@ -125,20 +154,18 @@
                 <span class="badge badge-soft">Auto • RSS</span>
               </div>
               <div class="card-body">
-                <rssapp-imageboard id="ICCUIF4kF5MlzXJs"></rssapp-imageboard><script src="https://widget.rss.app/v1/imageboard.js" type="text/javascript" async></script>
+                <rssapp-imageboard id="ICCUIF4kF5MlzXJs"></rssapp-imageboard>
+                <script src="https://widget.rss.app/v1/imageboard.js" async></script>
               </div>
             </div>
           </section>
         </div>
 
-        <!-- RIGHT SIDEBAR -->
+        <!-- SIDEBAR -->
         <div class="col-lg-4">
           <div class="sticky-top-2">
-            <!-- 300x600 Ad Placeholder -->
-            <!-- Adsterra 300x600 Sidebar Ad -->
-<script async="async" data-cfasync="false" src="//pl27886751.effectivegatecpm.com/f54538e1c2ec1a556506c61548cb0054/invoke.js"></script>
-<div id="container-f54538e1c2ec1a556506c61548cb0054"></div>
-
+            <script async data-cfasync="false" src="//pl27886751.effectivegatecpm.com/f54538e1c2ec1a556506c61548cb0054/invoke.js"></script>
+            <div id="container-f54538e1c2ec1a556506c61548cb0054"></div>
 
             <div class="card shadow-sm mb-4">
               <div class="card-header"><i class="bi bi-funnel me-2"></i>Quick Filters</div>
@@ -173,7 +200,6 @@
     </div>
   </main>
 
-  <!-- ABOUT / FOOTER -->
   <footer id="about" class="footer py-4">
     <div class="container">
       <div class="row g-4 align-items-center">
@@ -189,14 +215,8 @@
     </div>
   </footer>
 
-  <!-- FEED WIDGET SCRIPTS (FeedWind) -->
-  <!-- Replace the IDs with your actual FeedWind widget IDs -->
-
-  <!-- BOOTSTRAP JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
   <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
-
-  <!-- Global Ad Script (moved for stability) -->
-  <script type='text/javascript' src='//pl27886731.effectivegatecpm.com/60/2a/ed/602aed825ecc89c7de4307c856981ce2.js'></script>
+  <script async src="//pl27886731.effectivegatecpm.com/60/2a/ed/602aed825ecc89c7de4307c856981ce2.js"></script>
 </body>
 </html>
