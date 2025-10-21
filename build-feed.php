@@ -17,7 +17,7 @@ $SOURCES = [
   // PH News → GMA (rss.app feed)
   ['url' => 'https://rss.app/feeds/jvx17FqERQHCjtka.xml', 'tag' => 'ph',      'label' => 'GMA News',       'category' => 'PH News'],
   // Tech & Innovation → Inquirer
-  ['url' => 'https://rss.app/feeds/ICCUIF4kF5MlzXJs.xml', 'tag' => 'tech',    'label' => 'Inquirer Tech',  'category' => 'Tech & Innovation'],
+  ['url' => 'https://rss.app/feeds/xoLNJ5ZwxVDYaRCl.xml', 'tag' => 'tech',    'label' => 'Inquirer Tech',  'category' => 'Tech & Innovation'],
 ];
 
 /* ==========================================================
