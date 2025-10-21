@@ -1,31 +1,30 @@
 <?php
 /**
- * build-feed.php — RSS aggregator + Share Cards
- * Generates:
- *   - /feed.xml  (merged feed)
- *   - /c/{id}.html (share card pages with OG tags that redirect to source)
- *
- * Works on Cloudflare Pages, GitHub Pages+Actions, Netlify, Vercel, etc.
+ * build-feed.php — RSS aggregator + local share pages (OG wrapper)
+ * Host-agnostic: Cloudflare Pages, GitHub Pages+Actions, Netlify, Vercel, etc.
+ * - Builds /feed.xml
+ * - Creates /p/{slug}.html per item with OG tags, then redirects to source
  */
+
 date_default_timezone_set('Asia/Manila');
 
 /* =======================
-   CONFIG: Your sources
+   SOURCES
    ======================= */
 $SOURCES = [
   // Gadgets → GSMArena (rss.app feed)
-  ['url' => 'https://rss.app/feeds/f92kwVzjq4XUE6h3.xml', 'tag' => 'gadgets', 'label' => 'GSMArena',                'category' => 'Gadgets'],
+  ['url' => 'https://rss.app/feeds/f92kwVzjq4XUE6h3.xml', 'tag' => 'gadgets', 'label' => 'GSMArena',               'category' => 'Gadgets'],
   // PH News → GMA (rss.app feed)
-  ['url' => 'https://rss.app/feeds/jvx17FqERQHCjtka.xml', 'tag' => 'ph',      'label' => 'GMA News',               'category' => 'PH News'],
+  ['url' => 'https://rss.app/feeds/jvx17FqERQHCjtka.xml', 'tag' => 'ph',      'label' => 'GMA News',              'category' => 'PH News'],
   // Tech & Innovation → Interesting Engineering (rss.app feed)
-  ['url' => 'https://rss.app/feeds/xoLNJ5ZwxVDYaRCl.xml', 'tag' => 'tech',    'label' => 'Interesting Engineering','category' => 'Tech & Innovation'],
+  ['url' => 'https://rss.app/feeds/xoLNJ5ZwxVDYaRCl.xml', 'tag' => 'tech',    'label' => 'InterestingEngineering','category' => 'Tech & Innovation'],
 ];
 
 /* =======================
-   Detect site origin (for absolute URLs)
+   ORIGIN DETECTION
    ======================= */
 function arg_val($argv, $key) {
-  foreach ($argv as $a) if (str_starts_with($a, "--$key=")) return substr($a, strlen($key) + 3);
+  foreach (($argv ?? []) as $a) if (str_starts_with($a, "--$key=")) return substr($a, strlen($key) + 3);
   return null;
 }
 function normalize_origin($s) {
@@ -36,30 +35,27 @@ function normalize_origin($s) {
 }
 function detect_origin() {
   global $argv;
-  if (isset($argv)) {
-    $cli = arg_val($argv, 'origin');
-    if ($cli) return normalize_origin($cli);
-  }
-  $candidates = [
+  $cli = isset($argv) ? arg_val($argv, 'origin') : null;
+  if ($cli) return normalize_origin($cli);
+  foreach ([
     'SITE_ORIGIN',
-    'CF_PAGES_URL', 'PAGES_URL',
+    'CF_PAGES_URL','PAGES_URL',
     'NETLIFY_SITE_URL',
     'VERCEL_URL',
     'RENDER_EXTERNAL_URL',
     'RAILWAY_PUBLIC_DOMAIN',
-    'GITHUB_PAGES_URL', 'PUBLIC_URL',
-  ];
-  foreach ($candidates as $k) {
+    'GITHUB_PAGES_URL','PUBLIC_URL',
+  ] as $k) {
     $v = getenv($k);
     if ($v) return normalize_origin($v);
   }
   return '';
 }
 $ORIGIN = detect_origin();
-$CHANNEL_LINK_FALLBACK = 'https://pinoytechfeed.pages.dev'; // change if you move
+$CHANNEL_LINK_FALLBACK = 'https://pinoytechfeed.pages.dev'; // palitan kung lilipat ka
 
 /* =======================
-   Channel meta
+   CHANNEL META
    ======================= */
 $CHANNEL = [
   'title'       => 'PinoyTechFeed',
@@ -69,7 +65,7 @@ $CHANNEL = [
 ];
 
 /* =======================
-   Helpers
+   HELPERS
    ======================= */
 function http_get($url, $timeout = 20) {
   $ch = curl_init($url);
@@ -87,13 +83,20 @@ function http_get($url, $timeout = 20) {
 function ts($s) { $t = strtotime((string)$s); return $t ?: time(); }
 function guess_mime($url) {
   $ext = strtolower(pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION));
-  return match($ext) {
-    'png'  => 'image/png',
-    'gif'  => 'image/gif',
-    'webp' => 'image/webp',
-    default => 'image/jpeg',
-  };
+  return match($ext) { 'png'=>'image/png','gif'=>'image/gif','webp'=>'image/webp', default=>'image/jpeg' };
 }
+function slugify($text, $max = 80) {
+  $text = strtolower(trim($text));
+  $text = preg_replace('~[^\pL\d]+~u', '-', $text);
+  $text = trim($text, '-');
+  $text = preg_replace('~[^-\w]+~', '', $text);
+  if (strlen($text) > $max) $text = substr($text, 0, $max);
+  $text = trim($text, '-');
+  return $text ?: 'post';
+}
+function clean($s) { return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_XML1); }
+
+/** Extract <item>s from a feed */
 function extract_items($xml, $sourceUrl, $tag, $label, $categoryText) {
   $out = [];
   libxml_use_internal_errors(true);
@@ -109,7 +112,6 @@ function extract_items($xml, $sourceUrl, $tag, $label, $categoryText) {
       $date  = (string)$itm->pubDate;
       $img   = '';
 
-      // media:content / media:thumbnail
       if (!empty($ns['media'])) {
         $media = $itm->children($ns['media']);
         if (isset($media->content)) {
@@ -121,12 +123,10 @@ function extract_items($xml, $sourceUrl, $tag, $label, $categoryText) {
           if (isset($attrs['url'])) $img = (string)$attrs['url'];
         }
       }
-      // enclosure
       if (!$img && isset($itm->enclosure)) {
         $attrs = $itm->enclosure->attributes();
         if (isset($attrs['url'])) $img = (string)$attrs['url'];
       }
-      // sniff first <img> in description
       if (!$img && $desc && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $desc, $m)) {
         $img = $m[1];
       }
@@ -146,134 +146,150 @@ function extract_items($xml, $sourceUrl, $tag, $label, $categoryText) {
   return $out;
 }
 
+/** Build a local OG wrapper page for sharing */
+function write_share_page($origin, $slug, $it) {
+  $dir = __DIR__ . '/p';
+  if (!is_dir($dir)) @mkdir($dir, 0775, true);
+
+  $title = clean($it['title'] ?: 'PinoyTechFeed');
+  $desc  = clean($it['desc']  ?: 'Read more on PinoyTechFeed');
+  $img   = clean($it['img']   ?: ($origin . '/og-default.jpg'));
+  $src   = clean($it['link']);
+  $tag   = strtoupper($it['category'] ?? $it['tag'] ?? 'Tech');
+
+  // 0.3s delay so the OG bot fetches this page’s tags before redirect
+  $html = <<<HTML
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{$title} · PinoyTechFeed</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="{$desc}">
+<link rel="canonical" href="{$src}">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:title" content="{$title}">
+<meta property="og:description" content="{$desc}">
+<meta property="og:image" content="{$img}">
+<meta property="og:url" content="{$origin}/p/{$slug}.html">
+<meta property="og:site_name" content="PinoyTechFeed">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{$title}">
+<meta name="twitter:description" content="{$desc}">
+<meta name="twitter:image" content="{$img}">
+
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto;display:grid;place-content:center;min-height:100vh;background:#0b1220;color:#e2e8f0;text-align:center}
+  a.btn{display:inline-block;margin-top:16px;padding:10px 14px;border:1px solid #213048;border-radius:8px;color:#e2e8f0;text-decoration:none}
+  .tag{opacity:.7;font-size:12px;margin-top:8px}
+</style>
+<meta http-equiv="refresh" content="0.3;url={$src}">
+<script>setTimeout(()=>location.replace("{$src}"),300);</script>
+</head>
+<body>
+  <div>
+    <div class="tag">PinoyTechFeed · {$tag}</div>
+    <h1 style="max-width:900px;margin:12px auto 0;line-height:1.2">{$title}</h1>
+    <p style="opacity:.85;max-width:800px;margin:8px auto 0">Redirecting to the full story…</p>
+    <p><a class="btn" href="{$src}">Continue to source</a></p>
+  </div>
+</body>
+</html>
+HTML;
+
+  file_put_contents("$dir/{$slug}.html", $html);
+  return "{$origin}/p/{$slug}.html";
+}
+
 /* =======================
-   Collect & dedupe
+   Collect, dedupe, build pages
    ======================= */
 $all = [];
 foreach ($SOURCES as $src) {
   if (!$xml = http_get($src['url'])) continue;
   foreach (extract_items($xml, $src['url'], $src['tag'], $src['label'], $src['category']) as $it) {
-    if (!empty($it['link'])) $all[$it['link']] = $it; // de-dupe by link
+    if (empty($it['link'])) continue;
+    $all[$it['link']] = $it; // de-dupe by source link
   }
 }
 $items = array_values($all);
 usort($items, fn($a,$b) => $b['ts'] <=> $a['ts']);
 $items = array_slice($items, 0, 40);
 
-/* =======================
-   Ensure /c exists (share cards folder)
-   ======================= */
-@mkdir(__DIR__ . '/c', 0775, true);
+/* Build local share pages and replace link */
+$originForPages = $ORIGIN ?: $CHANNEL_LINK_FALLBACK;
+$seenSlugs = [];
+foreach ($items as &$it) {
+  $base = slugify($it['title'] ?: 'post');
+  $slug = $base;
+  $i = 2;
+  while (isset($seenSlugs[$slug])) { $slug = $base . '-' . $i++; }
+  $seenSlugs[$slug] = true;
+
+  $local = write_share_page($originForPages, $slug, [
+    'title' => $it['title'],
+    'desc'  => $it['desc'],
+    'img'   => $it['img'],
+    'link'  => $it['link'],
+    'tag'   => $it['tag'],
+    'category' => $it['category'],
+  ]);
+
+  $it['local'] = $local; // this will be used in RSS <link>
+}
+unset($it);
 
 /* =======================
-   Write RSS + Share Cards
+   Write RSS
    ======================= */
 $now  = date(DATE_RSS);
-$xml  = [];
-$xml[] = '<?xml version="1.0" encoding="UTF-8"?>';
-$xml[] = '<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:ptf="https://pinoytechfeed">';
-$xml[] = '<channel>';
-
+$out  = [];
+$out[] = '<?xml version="1.0" encoding="UTF-8"?>';
+$out[] = '<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/" xmlns:atom="http://www.w3.org/2005/Atom">';
+$out[] = '<channel>';
 if (!empty($ORIGIN)) {
-  $xml[] = '<atom:link href="'.$ORIGIN.'/feed.xml" rel="self" type="application/rss+xml"/>';
+  $out[] = '<atom:link href="'.$ORIGIN.'/feed.xml" rel="self" type="application/rss+xml"/>';
 }
-
-$xml[] = '<title>'.htmlspecialchars($CHANNEL['title'], ENT_XML1).'</title>';
-$xml[] = '<link>'.htmlspecialchars($CHANNEL['link'], ENT_XML1).'</link>';
-$xml[] = '<description>'.htmlspecialchars($CHANNEL['description'], ENT_XML1).'</description>';
-$xml[] = '<language>'.$CHANNEL['language'].'</language>';
-$xml[] = '<lastBuildDate>'.$now.'</lastBuildDate>';
-$xml[] = '<ttl>30</ttl>';
-$xml[] = '<generator>PinoyTechFeed RSS Generator</generator>';
+$out[] = '<title>'.clean($CHANNEL['title']).'</title>';
+$out[] = '<link>'.clean($CHANNEL['link']).'</link>';
+$out[] = '<description>'.clean($CHANNEL['description']).'</description>';
+$out[] = '<language>'.$CHANNEL['language'].'</language>';
+$out[] = '<lastBuildDate>'.$now.'</lastBuildDate>';
+$out[] = '<ttl>30</ttl>';
+$out[] = '<generator>PinoyTechFeed RSS Generator</generator>';
 
 foreach ($items as $it) {
-  // ---- Build share card ----
-  $id        = substr(md5($it['link']), 0, 10);
-  $shareUrl  = !empty($ORIGIN) ? $ORIGIN . "/c/{$id}.html" : $it['link'];
-  $dest      = $it['link'];
-
-  $ogTitle   = htmlspecialchars($it['title'] ?: 'Untitled', ENT_QUOTES);
-  $ogDesc    = htmlspecialchars($it['desc']  ?: '',        ENT_QUOTES);
-  $ogImage   = htmlspecialchars($it['img']   ?: '',        ENT_QUOTES);
-  $canonDest = htmlspecialchars($dest,                       ENT_QUOTES);
-
-  // Card HTML
-  $og = <<<HTML
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{$ogTitle} · PinoyTechFeed</title>
-<link rel="canonical" href="{$canonDest}">
-<meta property="og:type" content="article">
-<meta property="og:title" content="{$ogTitle}">
-<meta property="og:description" content="{$ogDesc}">
-<meta property="og:url" content="{$shareUrl}">
-HTML;
-
-  if (!empty($ogImage)) {
-    $og .= "\n<meta property=\"og:image\" content=\"{$ogImage}\">";
-  }
-
-  $og .= <<<HTML
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{$ogTitle}">
-<meta name="twitter:description" content="{$ogDesc}">
-HTML;
-
-  if (!empty($ogImage)) {
-    $og .= "\n<meta name=\"twitter:image\" content=\"{$ogImage}\">";
-  }
-
-  $og .= <<<HTML
-
-<meta http-equiv="refresh" content="1;url={$canonDest}">
-<style>
-  body{background:#0b1220;color:#e2e8f0;font:16px system-ui;-webkit-font-smoothing:antialiased;text-align:center;padding:48px}
-  a{color:#9ddfff}
-</style>
-</head>
-<body>
-  <h1>Redirecting…</h1>
-  <p>Sending you to the full article. If it doesn't load, <a href="{$canonDest}">tap here</a>.</p>
-</body>
-</html>
-HTML;
-
-  file_put_contents(__DIR__ . "/c/{$id}.html", $og);
-
-  // ---- Write RSS item ----
-  $title = htmlspecialchars($it['title'] ?: 'Untitled', ENT_XML1);
-  $link  = htmlspecialchars($it['link'], ENT_XML1);
-  $desc  = htmlspecialchars($it['desc'] ?: '', ENT_XML1);
+  $title = clean($it['title'] ?: 'Untitled');
+  $link  = clean($it['local'] ?: $it['link']);  // ← local wrapper link!
+  $desc  = clean($it['desc'] ?: '');
   $date  = date(DATE_RSS, $it['ts']);
   $img   = $it['img'];
-  $cat   = htmlspecialchars($it['category'], ENT_XML1);
-  $src   = htmlspecialchars($it['source'],   ENT_XML1);
-  $shareSafe = htmlspecialchars($shareUrl,   ENT_XML1);
+  $cat   = clean($it['category']);
+  $src   = clean($it['source']);
 
-  $xml[] = '<item>';
-  $xml[] =   "<title>{$title}</title>";
-  $xml[] =   "<link>{$link}</link>";
-  $xml[] =   "<description>{$desc}</description>";
-  $xml[] =   "<pubDate>{$date}</pubDate>";
-  $xml[] =   "<guid isPermaLink=\"true\">{$link}</guid>";
-  $xml[] =   "<category>{$cat}</category>";
-  $xml[] =   "<source>{$src}</source>";
-  $xml[] =   "<ptf:share>{$shareSafe}</ptf:share>"; // <-- your share-card URL
+  $out[] = '<item>';
+  $out[] =   "<title>{$title}</title>";
+  $out[] =   "<link>{$link}</link>";
+  $out[] =   "<description>{$desc}</description>";
+  $out[] =   "<pubDate>{$date}</pubDate>";
+  $out[] =   "<guid isPermaLink=\"true\">{$link}</guid>";
+  $out[] =   "<category>{$cat}</category>";
+  $out[] =   "<source>{$src}</source>";
   if ($img) {
     $type = guess_mime($img);
-    $safe = htmlspecialchars($img, ENT_XML1);
-    $xml[] =   "<enclosure url=\"{$safe}\" type=\"{$type}\" />";
-    $xml[] =   "<media:content url=\"{$safe}\" medium=\"image\" />";
+    $safe = clean($img);
+    $out[] =   "<enclosure url=\"{$safe}\" type=\"{$type}\" />";
+    $out[] =   "<media:content url=\"{$safe}\" medium=\"image\" />";
   }
-  $xml[] = '</item>';
+  $out[] = '</item>';
 }
 
-$xml[] = '</channel>';
-$xml[] = '</rss>';
+$out[] = '</channel>';
+$out[] = '</rss>';
 
-file_put_contents(__DIR__.'/feed.xml', implode("\n", $xml));
-echo "✅ feed.xml + /c/*.html written".(!empty($ORIGIN) ? " for {$ORIGIN}" : " (no origin set)")."\n";
+file_put_contents(__DIR__.'/feed.xml', implode("\n", $out));
+echo "✅ feed.xml written; ".count($items)." wrapper pages in /p\n";
