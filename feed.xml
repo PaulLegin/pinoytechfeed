@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>PinoyTechFeed RSS</title>
+    <link>https://pinoytechfeed.netlify.app/</link>
+    <description>Latest gadget updates and Philippine tech news — curated by PinoyTechFeed.</description>
+    <language>en</language>
+    <lastBuildDate>Tue, 21 Oct 2025 14:00:00 +0800</lastBuildDate>
+    <generator>Manual seed feed</generator>
+
+    <item>
+      <title>Welcome to PinoyTechFeed</title>
+      <link>https://pinoytechfeed.netlify.app/</link>
+      <description>Sample item to verify the RSS feed works with dlvr.it.</description>
+      <pubDate>Tue, 21 Oct 2025 13:30:00 +0800</pubDate>
+      <guid isPermaLink="true">https://pinoytechfeed.netlify.app/</guid>
+      <category>Announcement</category>
+    </item>
+
+    <item>
+      <title>PH Headlines: Connectivity Expands</title>
+      <link>https://pinoytechfeed.netlify.app/#phnews</link>
+      <description>Philippine digital connectivity continues to expand across regions. (Sample link)</description>
+      <pubDate>Tue, 21 Oct 2025 12:00:00 +0800</pubDate>
+      <guid isPermaLink="false">pinoytechfeed-2025-10-21-1200</guid>
+      <category>PH News</category>
+    </item>
+
+    <item>
+      <title>Gadget Watch: New Flagship Launches</title>
+      <link>https://pinoytechfeed.netlify.app/#gadgets</link>
+      <description>AI camera, longer battery, and faster chipsets. (Sample link)</description>
+      <pubDate>Tue, 21 Oct 2025 11:00:00 +0800</pubDate>
+      <guid isPermaLink="false">pinoytechfeed-2025-10-21-1100</guid>
+      <category>Gadgets</category>
+    </item>
+
+  </channel>
+</rss>
