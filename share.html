@@ -16,7 +16,6 @@
   .btn{display:inline-block;border:1px solid var(--brd);background:#0b1324;color:var(--fg);padding:8px 12px;border-radius:8px;text-decoration:none;font-size:14px;cursor:pointer}
   .btn:hover{border-color:#375184}
   .btn-accent{background:var(--accent);border-color:#1da34f;color:#06220f}
-  .badge{padding:3px 8px;border:1px solid #2f465f;border-radius:99px;color:#a0c5ff;font-size:12px}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
   .card{background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
   .meta{color:var(--muted);font-size:12px}
@@ -28,6 +27,7 @@
   .tabs{display:flex;gap:8px;flex-wrap:wrap}
   .tab{padding:6px 10px;border:1px solid var(--brd);border-radius:999px;cursor:pointer}
   .tab.active{background:#12203a}
+  .notice{margin:10px 0;padding:10px;border:1px dashed #5472a3;border-radius:8px;color:#a6c4ff;background:#0b1324}
 </style>
 </head>
 <body>
@@ -39,6 +39,8 @@
 </header>
 
 <main class="wrap">
+  <div id="debug" class="notice" style="display:none"></div>
+
   <div class="toolbar">
     <div class="tabs" id="tabs">
       <span class="tab active" data-filter="">All</span>
@@ -59,7 +61,6 @@
 
 <script>
 (function() {
-  // ✅ absolute url avoids any subpath issues and is friendlier to iOS Safari
   const FEED_URL = 'https://pinoytechfeed.netlify.app/feed.xml';
   const UTM_BASE = { utm_medium: 'social', utm_campaign: 'ptf_share' };
 
@@ -67,9 +68,15 @@
   const qEl = document.getElementById('q');
   const tabsEl = document.getElementById('tabs');
   const copyAllEl = document.getElementById('copyAll');
+  const debugEl = document.getElementById('debug');
 
   let items = [];
   let currentFilter = '';
+
+  function showDebug(msg) {
+    debugEl.style.display = 'block';
+    debugEl.textContent = msg;
+  }
 
   function addUTM(url, source) {
     try {
@@ -115,7 +122,6 @@
       if (!(matchesTab && matchesQ)) continue;
 
       const share = shareLinks(it);
-
       rows.push(`
         <article class="card">
           ${it.img ? `<img class="thumb" src="${it.img}" alt="">` : ``}
@@ -133,7 +139,6 @@
     }
     listEl.innerHTML = rows.join('') || `<div class="meta">No items match your filter.</div>`;
 
-    // wire copy buttons
     [...listEl.querySelectorAll('button[data-copy]')].forEach(btn => {
       btn.addEventListener('click', async () => {
         const text = decodeURIComponent(btn.getAttribute('data-copy'));
@@ -165,55 +170,81 @@
     catch { prompt('Copy these:', caps); }
   });
 
-  // ✅ robust loader: Safari-safe XML parsing + namespace-friendly image detection
+  // -------- Robust loader with fallback --------
   async function load() {
     try {
       const res = await fetch(FEED_URL, { cache: 'no-store' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
 
+      // Try XML parse (application/xml is more strict)
       const parser = new DOMParser();
-      const xml = parser.parseFromString(text, 'text/xml');
-
+      const xml = parser.parseFromString(text, 'application/xml');
       const parseErr = xml.getElementsByTagName('parsererror')[0];
-      if (parseErr) throw new Error('XML parse error: ' + parseErr.textContent.trim());
 
-      const raw = Array.from(xml.getElementsByTagName('item'));
-      items = raw.map(it => {
-        const pick = tag => (it.getElementsByTagName(tag)[0]?.textContent || '').trim();
-        const title = pick('title') || '(no title)';
-        const link  = pick('link');
-        const date  = pick('pubDate');
+      let raw = [];
+      if (!parseErr) {
+        raw = Array.from(xml.getElementsByTagName('item'));
+      } else {
+        showDebug('XML parse warning on this browser; using fallback parser.');
+      }
 
-        // enclosure / media:content
-        let img = '';
-        const enclosure = it.getElementsByTagName('enclosure')[0];
-        if (enclosure && enclosure.getAttribute('url')) img = enclosure.getAttribute('url');
-        if (!img) {
-          const media1 = it.getElementsByTagName('media:content')[0];
-          const media2 = it.getElementsByTagName('content')[0]; // fallback if prefix stripped
-          const node = media1 || media2;
-          if (node && node.getAttribute('url')) img = node.getAttribute('url');
-        }
+      if (raw.length === 0) {
+        // Fallback: quick regex chunker to extract minimal fields
+        const chunks = text.split(/<\/item>/i).filter(s => /<item>/i.test(s)).map(s => s + '</item>');
+        raw = chunks.map((chunk) => {
+          const pick = (tag) => (chunk.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'))?.[1] || '').trim();
+          const title = pick('title');
+          const link  = pick('link');
+          const date  = pick('pubDate');
+          const cat   = pick('category').toLowerCase();
+          let img = '';
+          const enc  = chunk.match(/<enclosure[^>]*url=["']([^"']+)["']/i)?.[1];
+          const mrss = chunk.match(/<(?:media:content|content)[^>]*url=["']([^"']+)["']/i)?.[1];
+          img = enc || mrss || '';
+          let tag = '';
+          if (cat.includes('gadgets')) tag = 'gadgets';
+          else if (cat === 'ph')       tag = 'ph';
+          else if (cat.includes('tech')) tag = 'tech';
+          let source = 'Source';
+          try { source = new URL(link).hostname.replace(/^www\./,''); } catch {}
+          return { title, link, date, img, tag, source };
+        });
+      } else {
+        // Normal XML-to-items mapping
+        items = raw.map(it => {
+          const pick = tag => (it.getElementsByTagName(tag)[0]?.textContent || '').trim();
+          const title = pick('title') || '(no title)';
+          const link  = pick('link');
+          const date  = pick('pubDate');
+          let img = '';
+          const enclosure = it.getElementsByTagName('enclosure')[0];
+          if (enclosure && enclosure.getAttribute('url')) img = enclosure.getAttribute('url');
+          if (!img) {
+            const media1 = it.getElementsByTagName('media:content')[0];
+            const media2 = it.getElementsByTagName('content')[0];
+            const node = media1 || media2;
+            if (node && node.getAttribute('url')) img = node.getAttribute('url');
+          }
+          const catText = pick('category').toLowerCase();
+          let tag = '';
+          if (catText.includes('gadgets')) tag = 'gadgets';
+          else if (catText === 'ph')       tag = 'ph';
+          else if (catText.includes('tech')) tag = 'tech';
+          let source = 'Source';
+          try { source = new URL(link).hostname.replace(/^www\./,''); } catch {}
+          return { title, link, date, img, tag, source };
+        });
+      }
 
-        // read category we stamped in the feed (Gadgets | PH | Tech)
-        const catText = pick('category').toLowerCase();
-        let tag = '';
-        if (catText.includes('gadgets')) tag = 'gadgets';
-        else if (catText === 'ph')       tag = 'ph';
-        else if (catText.includes('tech')) tag = 'tech';
+      // if fallback created items, set them now
+      if (raw.length && !items.length) items = raw;
 
-        // friendly source label from domain
-        let source = 'Source';
-        try { source = new URL(link).hostname.replace(/^www\./,''); } catch {}
-
-        return { title, link, date, img, tag, source };
-      });
-
+      showDebug(`Loaded ${items.length} items.`);
       render();
     } catch (err) {
-      console.error(err);
-      listEl.innerHTML = `<div class="meta">Failed to load feed: ${String(err)}</div>`;
+      showDebug('Failed to load feed: ' + String(err));
+      listEl.innerHTML = `<div class="meta">Failed to load feed. ${String(err)}</div>`;
     }
   }
 
