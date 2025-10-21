@@ -1,26 +1,86 @@
 <?php
-// build-feed.php — PinoyTechFeed RSS aggregator
-// Maps sources to categories and writes /feed.xml
+/**
+ * build-feed.php — Generic RSS aggregator for PinoyTechFeed
+ * Works anywhere (GitHub Pages, Cloudflare Pages, Netlify, Vercel, Render, Railway, local)
+ * - Auto-detects SITE ORIGIN from CLI arg or common env vars
+ * - Falls back gracefully if no origin found (skips <atom:link>)
+ */
 
 date_default_timezone_set('Asia/Manila');
 
-// Map your 3 feeds to stable tags + human labels + category text
+/* =======================
+   CONFIG: Your three sources
+   ======================= */
 $SOURCES = [
   // Gadgets → GSMArena (rss.app feed)
-  ['url' => 'https://rss.app/feeds/f92kwVzjq4XUE6h3.xml', 'tag' => 'gadgets', 'label' => 'GSMArena', 'category' => 'Gadgets'],
+  ['url' => 'https://rss.app/feeds/f92kwVzjq4XUE6h3.xml', 'tag' => 'gadgets', 'label' => 'GSMArena',       'category' => 'Gadgets'],
   // PH News → GMA (rss.app feed)
-  ['url' => 'https://rss.app/feeds/jvx17FqERQHCjtka.xml', 'tag' => 'ph', 'label' => 'GMA News', 'category' => 'PH News'],
-  // Tech & Innovation → Inquirer (rss.app feed)
-  ['url' => 'https://rss.app/feeds/ICCUIF4kF5MlzXJs.xml', 'tag' => 'tech', 'label' => 'Inquirer Tech', 'category' => 'Tech & Innovation'],
+  ['url' => 'https://rss.app/feeds/jvx17FqERQHCjtka.xml', 'tag' => 'ph',      'label' => 'GMA News',       'category' => 'PH News'],
+  // Tech & Innovation → Inquirer
+  ['url' => 'https://rss.app/feeds/ICCUIF4kF5MlzXJs.xml', 'tag' => 'tech',    'label' => 'Inquirer Tech',  'category' => 'Tech & Innovation'],
 ];
 
+/* ==========================================================
+   ORIGIN DETECTION (generic)
+   - CLI:   php build-feed.php --origin=https://your.site
+   - Envs:  SITE_ORIGIN, CF_PAGES_URL, PAGES_URL, NETLIFY_SITE_URL,
+            VERCEL_URL, RENDER_EXTERNAL_URL, RAILWAY_PUBLIC_DOMAIN,
+            GITHUB_PAGES_URL, PUBLIC_URL
+   If none found: skip <atom:link> and use a readable fallback link.
+   ========================================================== */
+function arg_val($argv, $key) {
+  foreach ($argv as $a) {
+    if (str_starts_with($a, "--$key=")) return substr($a, strlen($key) + 3);
+  }
+  return null;
+}
+function normalize_origin($s) {
+  if (!$s) return '';
+  $s = trim($s);
+  // If it looks like "my.site.com" add https://
+  if (!preg_match('~^https?://~i', $s)) $s = 'https://' . $s;
+  return rtrim($s, '/');
+}
+function detect_origin() {
+  global $argv;
+  // CLI arg
+  $cli = isset($argv) ? arg_val($argv, 'origin') : null;
+  if ($cli) return normalize_origin($cli);
+
+  // Common env vars across hosts
+  $candidates = [
+    'SITE_ORIGIN',
+    'CF_PAGES_URL', 'PAGES_URL',          // Cloudflare Pages
+    'NETLIFY_SITE_URL',                   // Netlify
+    'VERCEL_URL',                         // Vercel (usually without scheme)
+    'RENDER_EXTERNAL_URL',                // Render
+    'RAILWAY_PUBLIC_DOMAIN',              // Railway
+    'GITHUB_PAGES_URL', 'PUBLIC_URL',     // GH Pages / general
+  ];
+  foreach ($candidates as $k) {
+    $v = getenv($k);
+    if ($v) return normalize_origin($v);
+  }
+  return ''; // unknown (still ok)
+}
+
+$ORIGIN = detect_origin();
+// Fallback for <channel><link> if origin unknown (valid absolute URL recommended)
+$CHANNEL_LINK_FALLBACK = 'https://example.com'; // change if you want
+
+/* =======================
+   CHANNEL META
+   ======================= */
 $CHANNEL = [
   'title'       => 'PinoyTechFeed',
-  'link'        => 'https://pinoytechfeed.netlify.app',
+  'link'        => $ORIGIN ?: $CHANNEL_LINK_FALLBACK,
   'description' => 'Latest gadget updates and Philippine tech news — curated by PinoyTechFeed.',
   'language'    => 'en',
 ];
 
+/* =======================
+   Helpers
+   ======================= */
 function http_get($url, $timeout = 15) {
   $ch = curl_init($url);
   curl_setopt_array($ch, [
@@ -44,7 +104,6 @@ function guess_mime($url) {
     default => 'image/jpeg',
   };
 }
-
 function extract_items($xml, $sourceUrl, $tag, $label, $categoryText) {
   $out = [];
   libxml_use_internal_errors(true);
@@ -77,7 +136,7 @@ function extract_items($xml, $sourceUrl, $tag, $label, $categoryText) {
         $attrs = $itm->enclosure->attributes();
         if (isset($attrs['url'])) $img = (string)$attrs['url'];
       }
-      // sniff first <img> in description
+      // sniff first <img> in description (last resort)
       if (!$img && $desc) {
         if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $desc, $m)) {
           $img = $m[1];
@@ -90,37 +149,46 @@ function extract_items($xml, $sourceUrl, $tag, $label, $categoryText) {
         'desc'      => trim(strip_tags($desc)),
         'ts'        => ts($date),
         'img'       => $img,
-        'tag'       => $tag,          // internal tag for UI
-        'source'    => $label,        // label for display
-        'category'  => $categoryText, // <category> text in RSS
+        'tag'       => $tag,
+        'source'    => $label,
+        'category'  => $categoryText, // exact text for <category>
       ];
     }
   }
   return $out;
 }
 
-// Collect + dedupe by link
+/* =======================
+   Collect & dedupe
+   ======================= */
 $all = [];
 foreach ($SOURCES as $src) {
   if (!$xml = http_get($src['url'])) continue;
   foreach (extract_items($xml, $src['url'], $src['tag'], $src['label'], $src['category']) as $it) {
-    if (!empty($it['link'])) $all[$it['link']] = $it;
+    if (!empty($it['link'])) $all[$it['link']] = $it; // de-dupe by link
   }
 }
 
 $items = array_values($all);
 usort($items, fn($a,$b) => $b['ts'] <=> $a['ts']);
-$items = array_slice($items, 0, 40); // keep latest 40
+$items = array_slice($items, 0, 40); // keep latest N
 
-// Write RSS
+/* =======================
+   Write RSS
+   ======================= */
 $now  = date(DATE_RSS);
 $xml  = [];
 $xml[] = '<?xml version="1.0" encoding="UTF-8"?>';
 $xml[] = '<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/" xmlns:atom="http://www.w3.org/2005/Atom">';
 $xml[] = '<channel>';
-$xml[] = '<atom:link href="https://pinoytechfeed.netlify.app/feed.xml" rel="self" type="application/rss+xml"/>';
+
+// Self link only if we know our absolute origin
+if (!empty($ORIGIN)) {
+  $xml[] = '<atom:link href="'.$ORIGIN.'/feed.xml" rel="self" type="application/rss+xml"/>';
+}
+
 $xml[] = '<title>'.htmlspecialchars($CHANNEL['title'], ENT_XML1).'</title>';
-$xml[] = '<link>'.$CHANNEL['link'].'</link>';
+$xml[] = '<link>'.htmlspecialchars($CHANNEL['link'], ENT_XML1).'</link>';
 $xml[] = '<description>'.htmlspecialchars($CHANNEL['description'], ENT_XML1).'</description>';
 $xml[] = '<language>'.$CHANNEL['language'].'</language>';
 $xml[] = '<lastBuildDate>'.$now.'</lastBuildDate>';
@@ -157,4 +225,4 @@ $xml[] = '</channel>';
 $xml[] = '</rss>';
 
 file_put_contents(__DIR__.'/feed.xml', implode("\n", $xml));
-echo "✅ feed.xml written with categories\n";
+echo "✅ feed.xml written".(!empty($ORIGIN) ? " for {$ORIGIN}" : " (no origin set)")."\n";
