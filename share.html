@@ -59,7 +59,8 @@
 
 <script>
 (function() {
-  const FEED_URL = '/feed.xml'; // or full https://pinoytechfeed.netlify.app/feed.xml
+  // ✅ absolute url avoids any subpath issues and is friendlier to iOS Safari
+  const FEED_URL = 'https://pinoytechfeed.netlify.app/feed.xml';
   const UTM_BASE = { utm_medium: 'social', utm_campaign: 'ptf_share' };
 
   const listEl = document.getElementById('list');
@@ -69,15 +70,6 @@
 
   let items = [];
   let currentFilter = '';
-
-  function parseSource(link) {
-    try {
-      const u = new URL(link);
-      if (u.hostname.includes('gsmarena')) return { tag:'tech', label:'GSMArena' };
-      if (u.hostname.includes('gmanetwork')) return { tag:'ph', label:'GMA News' };
-      return { tag:'gadgets', label:u.hostname.replace(/^www\./,'') };
-    } catch { return { tag:'', label:'Source' }; }
-  }
 
   function addUTM(url, source) {
     try {
@@ -89,7 +81,6 @@
       u.search = params.toString();
       return u.toString();
     } catch {
-      // Fallback if URL constructor fails
       const sep = url.includes('?') ? '&' : '?';
       return `${url}${sep}utm_source=${encodeURIComponent(source)}&utm_medium=${encodeURIComponent(UTM_BASE.utm_medium)}&utm_campaign=${encodeURIComponent(UTM_BASE.utm_campaign)}`;
     }
@@ -100,11 +91,11 @@
     if (tag === 'ph')      return '#PHNews #PinoyTechFeed';
     if (tag === 'tech')    return '#Tech #PinoyTechFeed';
     return '#PinoyTechFeed';
-    }
+  }
 
   function toCaption(it, withHashtags = true) {
     const hash = withHashtags ? ` ${hashtagsFor(it.tag)}` : '';
-    const link = addUTM(it.link, 'facebook'); // default preview
+    const link = addUTM(it.link, 'facebook');
     return `${it.title} — Read more: ${link}${hash}`;
   }
 
@@ -130,7 +121,7 @@
           ${it.img ? `<img class="thumb" src="${it.img}" alt="">` : ``}
           <div class="title"><a href="${it.link}" target="_blank" rel="noopener">${it.title}</a></div>
           <div class="meta">${new Date(it.date).toLocaleString()}</div>
-          <div class="source">Source: ${it.source}</div>
+          <div class="source">Category: ${it.tag ? it.tag.toUpperCase() : 'General'} · Source: ${it.source}</div>
           <div class="btnrow">
             <a class="btn" target="_blank" rel="noopener" href="${share.fb}">Share to Facebook</a>
             <a class="btn" target="_blank" rel="noopener" href="${share.tw}">Share to X</a>
@@ -142,7 +133,7 @@
     }
     listEl.innerHTML = rows.join('') || `<div class="meta">No items match your filter.</div>`;
 
-    // Wire copy buttons
+    // wire copy buttons
     [...listEl.querySelectorAll('button[data-copy]')].forEach(btn => {
       btn.addEventListener('click', async () => {
         const text = decodeURIComponent(btn.getAttribute('data-copy'));
@@ -167,7 +158,6 @@
     const caps = shown.map(card => {
       const title = card.querySelector('.title')?.innerText || '';
       const link  = card.querySelector('.title a')?.href || '';
-      // Guess tag from badges is tricky here; just append generic hashtag
       const withUtm = addUTM(link, 'facebook');
       return `${title} — Read more: ${withUtm} #PinoyTechFeed`;
     }).join('\n\n');
@@ -175,25 +165,55 @@
     catch { prompt('Copy these:', caps); }
   });
 
+  // ✅ robust loader: Safari-safe XML parsing + namespace-friendly image detection
   async function load() {
     try {
       const res = await fetch(FEED_URL, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
-      const xml = new DOMParser().parseFromString(text, 'application/xml');
-      const raw = [...xml.querySelectorAll('channel > item')];
+
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(text, 'text/xml');
+
+      const parseErr = xml.getElementsByTagName('parsererror')[0];
+      if (parseErr) throw new Error('XML parse error: ' + parseErr.textContent.trim());
+
+      const raw = Array.from(xml.getElementsByTagName('item'));
       items = raw.map(it => {
-        const title = it.querySelector('title')?.textContent?.trim() || '(no title)';
-        const link = it.querySelector('link')?.textContent?.trim() || '';
-        const date = it.querySelector('pubDate')?.textContent?.trim() || '';
-        const img  = it.querySelector('enclosure')?.getAttribute('url')
-                  || it.querySelector('media\\:content')?.getAttribute('url')
-                  || '';
-        const src  = parseSource(link);
-        return { title, link, date, img, tag:src.tag, source:src.label };
+        const pick = tag => (it.getElementsByTagName(tag)[0]?.textContent || '').trim();
+        const title = pick('title') || '(no title)';
+        const link  = pick('link');
+        const date  = pick('pubDate');
+
+        // enclosure / media:content
+        let img = '';
+        const enclosure = it.getElementsByTagName('enclosure')[0];
+        if (enclosure && enclosure.getAttribute('url')) img = enclosure.getAttribute('url');
+        if (!img) {
+          const media1 = it.getElementsByTagName('media:content')[0];
+          const media2 = it.getElementsByTagName('content')[0]; // fallback if prefix stripped
+          const node = media1 || media2;
+          if (node && node.getAttribute('url')) img = node.getAttribute('url');
+        }
+
+        // read category we stamped in the feed (Gadgets | PH | Tech)
+        const catText = pick('category').toLowerCase();
+        let tag = '';
+        if (catText.includes('gadgets')) tag = 'gadgets';
+        else if (catText === 'ph')       tag = 'ph';
+        else if (catText.includes('tech')) tag = 'tech';
+
+        // friendly source label from domain
+        let source = 'Source';
+        try { source = new URL(link).hostname.replace(/^www\./,''); } catch {}
+
+        return { title, link, date, img, tag, source };
       });
+
       render();
     } catch (err) {
-      listEl.innerHTML = `<div class="meta">Failed to load feed. ${String(err)}</div>`;
+      console.error(err);
+      listEl.innerHTML = `<div class="meta">Failed to load feed: ${String(err)}</div>`;
     }
   }
 
