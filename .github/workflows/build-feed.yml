@@ -1,39 +1,30 @@
-name: Build & Commit RSS feed.xml
+name: Build and Commit RSS feed.xml
 
 on:
   schedule:
-    - cron: "0 2 * * *"   # Every day at 02:00 UTC
-  workflow_dispatch:
-  push:
-    paths:
-      - "build-feed.php"
-
-permissions:
-  contents: write
+    - cron: '0 2 * * *'  # Runs every day at 2:00 AM (UTC)
+  workflow_dispatch:      # Allows manual trigger
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.2"
+          php-version: '8.2'
 
-      - name: Build feed.xml
+      - name: Run feed builder
         run: php build-feed.php
 
-      - name: Commit feed.xml if changed
+      - name: Commit and push updated feed.xml
         run: |
-          if ! git diff --quiet -- feed.xml; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add feed.xml
-            git commit -m "chore: update feed.xml [skip ci]"
-            git push
-          else
-            echo "No changes in feed.xml"
-          fi
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add feed.xml
+          git commit -m "📰 Auto-update RSS feed.xml ($(date))" || echo "No changes to commit"
+          git push
