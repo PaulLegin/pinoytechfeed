@@ -1,94 +1,157 @@
 <?php
-// build-site.php — generates /p/*.html pages with OG + image proxy + local thumbnail support
+/**
+ * build-site.php — Build per-post HTML pages from feed.xml
+ * Output: /p/<slug>.html with full Open Graph tags (thumbnail works)
+ */
 
-$SITE = 'https://pinoytechfeed.pages.dev'; // change only if you use a different domain
-$DATA = json_decode(file_get_contents('feed.json'), true);
-$OUT = __DIR__ . '/p';
+date_default_timezone_set('Asia/Manila');
+
+$SITE = rtrim(getenv('SITE_ORIGIN') ?: 'https://pinoytechfeed.pages.dev', '/');
+$FEED = __DIR__ . '/feed.xml';
+$OUT  = __DIR__ . '/p';
+
+if (!file_exists($FEED)) {
+  fwrite(STDERR, "feed.xml not found\n");
+  exit(1);
+}
 if (!is_dir($OUT)) mkdir($OUT, 0777, true);
 
-// Image proxy for broken or hotlinked thumbnails
-function proxy_img($url, $w=1200, $h=630) {
-  if (!$url) return '';
-  $u = parse_url($url);
-  if (empty($u['host'])) return $url;
-  $hostPath = $u['host'] . ($u['path'] ?? '') . (isset($u['query']) ? '?'.$u['query'] : '');
-  return 'https://images.weserv.nl/?url=' . rawurlencode($hostPath) . "&w={$w}&h={$h}&fit=cover&we";
+function slugify($s) {
+  $s = strtolower(trim($s));
+  $s = preg_replace('~[^\pL\d]+~u', '-', $s);
+  $s = preg_replace('~[-]+~', '-', $s);
+  return trim($s, '-');
+}
+function esc($s){ return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+
+/** small util: try to guess image mime + dimensions for og:image tags */
+function guess_mime($url) {
+  $ext = strtolower(pathinfo(parse_url($url, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
+  return match($ext){
+    'png' => 'image/png',
+    'gif' => 'image/gif',
+    'webp'=> 'image/webp',
+    default => 'image/jpeg'
+  };
+}
+function img_dim($url) {
+  // best effort only (don’t block build if fails)
+  $w = 1200; $h = 630;       // sensible default for link previews
+  try {
+    $ctx = stream_context_create(['http'=>['timeout'=>5],'https'=>['timeout'=>5]]);
+    $bin = @file_get_contents($url, false, $ctx, 0, 200000);
+    if ($bin) {
+      $tmp = tempnam(sys_get_temp_dir(), 'ptf');
+      file_put_contents($tmp, $bin);
+      $info = @getimagesize($tmp);
+      if ($info && isset($info[0],$info[1])) { $w=$info[0]; $h=$info[1]; }
+      @unlink($tmp);
+    }
+  } catch(Throwable $e) {}
+  return [$w,$h];
 }
 
-foreach ($DATA as $p) {
-  $slug = $p['slug'];
-  $title = htmlspecialchars($p['title'], ENT_QUOTES);
-  $desc = htmlspecialchars($p['desc'] ?: $p['title'], ENT_QUOTES);
-  $img  = $p['img'] ?: "$SITE/assets/ptf-cover.png";
-  $cat  = htmlspecialchars($p['category']);
-  $src  = htmlspecialchars($p['source']);
-  $date = htmlspecialchars($p['ts']);
-  $url  = "$SITE/p/$slug.html";
+$xml = simplexml_load_file($FEED);
+$xml->registerXPathNamespace('media','http://search.yahoo.com/mrss/');
+$xml->registerXPathNamespace('atom','http://www.w3.org/2005/Atom');
 
-  // Download local OG image (to avoid hotlinking / Facebook cache problems)
-  $ogFile = "$OUT/og-$slug.jpg";
-  if (!file_exists($ogFile) && !empty($p['img'])) {
-    $imgData = @file_get_contents($p['img']);
-    if ($imgData) @file_put_contents($ogFile, $imgData);
+$map = []; // source link -> site target
+
+foreach ($xml->channel->item as $it) {
+  $title = trim((string)$it->title);
+  $srcLink = trim((string)$it->link);
+  $dateStr = trim((string)$it->pubDate);
+  $desc    = trim((string)$it->description);
+  $cat     = trim((string)$it->category);
+  $source  = trim((string)$it->source);
+
+  // image (prefer enclosure/media:content)
+  $img = '';
+  if (isset($it->enclosure['url'])) $img = (string)$it->enclosure['url'];
+  if (!$img) {
+    $mc = $it->children('http://search.yahoo.com/mrss/');
+    if (isset($mc->content['url'])) $img = (string)$mc->content['url'];
   }
-  $ogImg = file_exists($ogFile)
-    ? "$SITE/p/og-$slug.jpg"
-    : proxy_img($p['img']); // fallback proxy
 
-  $html = <<<HTML
-<!doctype html>
+  // slug + target url
+  $slug = slugify($title);
+  // make it unique-ish by tacking a 5-char hash of link if slug collides
+  $outfile = "$OUT/$slug.html";
+  if (file_exists($outfile)) {
+    $slug .= '-' . substr(md5($srcLink), 0, 5);
+    $outfile = "$OUT/$slug.html";
+  }
+  $target = "$SITE/p/$slug.html";
+
+  // OG image dims (best effort)
+  [$ogW,$ogH] = img_dim($img);
+  $mime = guess_mime($img);
+
+  $dateIso = $dateStr ? date(DATE_ATOM, strtotime($dateStr)) : date(DATE_ATOM);
+
+  $html = '<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>$title · PinoyTechFeed</title>
-<meta name="description" content="$desc" />
+<title>'.esc($title).' · PinoyTechFeed</title>
 
-<!-- Canonical and OG URL point to your page (not the original site) -->
-<link rel="canonical" href="$url" />
-<meta property="og:url" content="$url" />
-<meta property="og:type" content="article" />
+<link rel="canonical" href="'.esc($srcLink).'" />
+
+<meta name="description" content="'.esc($desc ?: $title).'" />
+
+<!-- Open Graph -->
 <meta property="og:site_name" content="PinoyTechFeed" />
-<meta property="og:title" content="$title" />
-<meta property="og:description" content="$desc" />
-<meta property="og:image" content="$ogImg" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="$title" />
-<meta property="og:locale" content="en_PH" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="'.esc($title).'" />
+<meta property="og:description" content="'.esc($desc ?: $title).'" />
+<meta property="og:url" content="'.esc($target).'" />'.
+($img ? '
+<meta property="og:image" content="'.esc($img).'" />
+<meta property="og:image:secure_url" content="'.esc($img).'" />
+<meta property="og:image:type" content="'.esc($mime).'" />
+<meta property="og:image:width" content="'.(int)$ogW.'" />
+<meta property="og:image:height" content="'.(int)$ogH.'" />' : '') . '
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="$title" />
-<meta name="twitter:description" content="$desc" />
-<meta name="twitter:image" content="$ogImg" />
+<meta name="twitter:title" content="'.esc($title).'" />
+<meta name="twitter:description" content="'.esc($desc ?: $title).'" />'.
+($img ? '<meta name="twitter:image" content="'.esc($img).'" />' : '') . '
 
-<!-- Optional: note the original source but keep OG canonical on your site -->
-<meta name="original-source" content="{$p['target']}" />
+<meta name="author" content="'.esc($source ?: 'PinoyTechFeed').'" />
+<meta property="article:published_time" content="'.esc($dateIso).'" />
 
 <style>
-  body {font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;margin:0;padding:0;background:#0b1220;color:#e2e8f0;}
-  .wrap {max-width:800px;margin:40px auto;padding:0 16px;}
-  img {max-width:100%;border-radius:10px;}
-  a {color:#22c55e;text-decoration:none;}
-  .meta {color:#9db7d8;font-size:14px;margin-bottom:10px;}
+  :root{--bg:#0b1220;--fg:#e2e8f0;--muted:#94a3b8;--card:#0f172a;--brd:#213048;--accent:#22c55e}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue","Noto Sans",Arial}
+  .wrap{max-width:860px;margin:28px auto;padding:0 16px}
+  a{color:#9dc1ff}
+  .card{background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:18px}
+  .meta{color:var(--muted);font-size:13px;margin-top:8px}
+  .btn{display:inline-block;margin-top:12px;border:1px solid var(--brd);border-radius:8px;padding:8px 12px;text-decoration:none;background:#0b1324;color:var(--fg)}
+  .btn:hover{border-color:#38598a}
+  img.hero{width:100%;max-height:420px;object-fit:cover;border-radius:10px;border:1px solid var(--brd);background:#0b1220}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>$title</h1>
-    <div class="meta">📅 $date · 🏷️ $cat · 🔗 $src</div>
-    <img src="$ogImg" alt="$title" />
-    <p style="margin-top:16px;">$desc</p>
-    <p><a href="{$p['target']}" target="_blank" rel="noopener">Read full article from $src →</a></p>
-    <p><a href="$SITE" style="color:#94a3b8;">← Back to PinoyTechFeed</a></p>
-  </div>
+  <main class="wrap">
+    <article class="card">
+      '.($img ? '<img class="hero" src="'.esc($img).'" alt="" referrerpolicy="no-referrer" />' : '').'
+      <h1>'.esc($title).'</h1>
+      <div class="meta">Category: '.esc($cat ?: 'General').' · Source: '.esc($source ?: 'Source').'</div>
+      <p>'.nl2br(esc($desc ?: $title)).'</p>
+      <a class="btn" href="'.esc($srcLink).'" rel="noopener nofollow" target="_blank">Read the full article on '.esc($source ?: 'original site').' →</a>
+    </article>
+  </main>
 </body>
-</html>
-HTML;
+</html>';
 
-  file_put_contents("$OUT/$slug.html", $html);
+  file_put_contents($outfile, $html);
+  $map[$srcLink] = $target;
 }
 
-echo "✅ Built " . count($DATA) . " pages in /p\n";
-?>
+/** OPTIONAL: write a tiny map json (can be used by share.html if desired) */
+file_put_contents("$OUT/map.json", json_encode($map, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT));
+
+echo "✅ Built ".count($map)." pages in /p\n";
