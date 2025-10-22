@@ -1,195 +1,98 @@
 <?php
 /**
- * build-site.php — generates /p/*.html pages from feed.xml
- * and rewrites feed.xml adding <ptf:* /> fields for the share dashboard.
- * Keep this beside build-feed.php (same folder).
+ * build-site.php — create /p/*.html reader pages (with OG tags)
  */
 date_default_timezone_set('Asia/Manila');
 
-$SITE = rtrim(getenv('SITE_ORIGIN') ?: 'https://pinoytechfeed.pages.dev', '/');
-$FEED = __DIR__.'/feed.xml';
-$OUT  = __DIR__.'/p';
-if (!is_dir($OUT)) mkdir($OUT, 0777, true);
+$SITE   = getenv('SITE_ORIGIN') ?: 'https://pinoytechfeed.pages.dev';
+$FEED   = __DIR__.'/feed.xml';
+$OUTDIR = __DIR__.'/p';
+$OGDEF  = $SITE.'/og-default.jpg';   // upload this image to repo root
 
-/* ---------- helpers ---------- */
-function pick_img($item, $ns) {
-  // media:content / enclosure
-  if (!empty($ns['media'])) {
-    $m = $item->children($ns['media']);
-    if (isset($m->content)) {
-      $a = $m->content->attributes();
-      if (!empty($a['url'])) return (string)$a['url'];
-    }
-  }
-  if (isset($item->enclosure)) {
-    $a = $item->enclosure->attributes();
-    if (!empty($a['url'])) return (string)$a['url'];
-  }
-  // sniff in description
-  $desc = (string)$item->description;
-  if ($desc && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $desc, $m)) {
-    return $m[1];
-  }
-  return '';
-}
-function short($s, $n=220){ $s=trim(strip_tags($s)); return mb_strlen($s)>$n? mb_substr($s,0,$n-1).'…' : $s; }
-function slugify($s){
-  $s = mb_strtolower($s,'UTF-8');
-  $s = preg_replace('~[^\pL\d]+~u','-',$s);
-  $s = trim($s,'-');
-  $s = preg_replace('~[^-\w]+~u','',$s);
-  if (empty($s)) $s = 'post';
-  return $s;
-}
-function shash($link){ return substr(sha1($link), 0, 6); } // JS-free stable slug suffix
-function write_file($path,$html){ file_put_contents($path,$html); }
+if(!is_dir($OUTDIR)) mkdir($OUTDIR,0777,true);
 
-/* ---------- load feed ---------- */
-libxml_use_internal_errors(true);
-$xml = simplexml_load_file($FEED);
-if (!$xml) { fwrite(STDERR,"feed.xml not found or invalid\n"); exit(1); }
-$ns  = $xml->getNamespaces(true);
+function shorten($s,$n=220){ $s=trim(preg_replace('/\s+/',' ',$s??'')); return mb_strlen($s)>$n?mb_substr($s,0,$n-1).'…':$s; }
+function safe($s){ return htmlspecialchars($s,ENT_QUOTES); }
+function pick_img($img){ return $img && preg_match('~^https?://~',$img) ? $img : $GLOBALS['OGDEF']; }
 
-/* ---------- build pages + collect enriched items ---------- */
-$items_out = [];
-foreach ($xml->channel->item as $it) {
-  $title = trim((string)$it->title) ?: 'Untitled';
-  $link  = trim((string)$it->link);
-  $desc  = (string)$it->description;
-  $date  = (string)$it->pubDate;
-  $cat   = (string)$it->category;
-  $src   = (string)$it->source;
-  $ts    = strtotime($date) ?: time();
-  $img   = pick_img($it, $ns);
+$xml=@simplexml_load_file($FEED);
+if(!$xml){ fwrite(STDERR,"feed.xml missing/invalid\n"); exit(1); }
 
-  $slug  = slugify($title);
-  $slug .= '-' . shash($link);
-  $file  = $slug . '.html';
-  $url   = $SITE . '/p/' . $file;
+$written=0;
+foreach($xml->channel->item as $it){
+  $title=(string)$it->title;
+  $desc =(string)$it->description ?: $title;
+  $date =(string)$it->pubDate;
+  $cat  =(string)$it->category ?: 'General';
+  $src  =(string)$it->source ?: '';
+  $img  ='';
+  if(isset($it->enclosure)){ $a=$it->enclosure->attributes(); if(!empty($a['url'])) $img=(string)$a['url']; }
+  if(!$img){ $ns=$it->getNamespaces(true); if(isset($ns['media'])){ $m=$it->children($ns['media']); if(isset($m->content)){ $a=$m->content->attributes(); if(!empty($a['url'])) $img=(string)$a['url']; } } }
+  $target=(string)$it->children('https://pinoytechfeed/pages/ns')->target;
+  if(!$target) continue;
 
-  // ---------- page HTML (with OG/Twitter) ----------
-  $ogimg = $img ?: ($SITE.'/og-default.jpg'); // optional: drop a default image
-  $ogw = 1200; $ogh = 630;
+  $slug=basename(parse_url($target,PHP_URL_PATH));
+  $og = pick_img($img);
 
-  $metadesc = short($desc ?: $title, 200);
-
-  $page = <<<HTML
+  $html = <<<HTML
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{$title} · PinoyTechFeed</title>
-<link rel="canonical" href="{$url}">
-<meta name="description" content="{$metadesc}">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Open Graph -->
-<meta property="og:type" content="article">
+<meta property="og:type" content="website">
 <meta property="og:site_name" content="PinoyTechFeed">
-<meta property="og:title" content="{$title}">
-<meta property="og:description" content="{$metadesc}">
-<meta property="og:url" content="{$url}">
-<meta property="og:image" content="{$ogimg}">
-<meta property="og:image:width" content="{$ogw}">
-<meta property="og:image:height" content="{$ogh}">
+<meta property="og:title" content=".::SAFE::.">
+<meta property="og:description" content=".::SAFE::.">
+<meta property="og:url" content="{$SITE}/p/{$slug}">
+<meta property="og:image" content="{$og}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 
-<!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{$title}">
-<meta name="twitter:description" content="{$metadesc}">
-<meta name="twitter:image" content="{$ogimg}">
-
+<meta name="twitter:title" content=".::SAFE::.">
+<meta name="twitter:description" content=".::SAFE::.">
+<meta name="twitter:image" content="{$og}">
 <style>
-  :root { --bg:#0b1220; --fg:#e2e8f0; --muted:#94a3b8; --card:#0f172a; --brd:#213048; --accent:#22c55e;}
-  body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue","Noto Sans",Arial;}
-  .wrap{max-width:860px;margin:24px auto;padding:0 16px}
-  .card{background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:16px}
-  .title{font-size:24px;font-weight:700;line-height:1.25;margin:0 0 8px}
-  .meta{color:var(--muted);font-size:13px;margin-bottom:12px}
-  .thumb{width:100%;max-height:460px;object-fit:cover;border-radius:10px;border:1px solid var(--brd);background:#0b1220}
-  .btn{display:inline-block;margin-top:16px;padding:10px 14px;border-radius:10px;background:var(--accent);color:#05240d;text-decoration:none;border:1px solid #169245}
-  header{display:flex;align-items:center;justify-content:space-between;margin:10px 0 18px}
-  header a{color:#8ecdfc}
+  :root{--bg:#0b1220;--fg:#e2e8f0;--muted:#94a3b8;--accent:#22c55e;--card:#0f172a;--brd:#213048;}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue","Noto Sans",Arial;line-height:1.55}
+  .wrap{max-width:900px;margin:32px auto;padding:0 16px}
+  .card{background:var(--card);border:1px solid var(--brd);border-radius:14px;padding:18px}
+  h1{margin:0 0 6px;font-size:28px}
+  .meta{color:var(--muted);font-size:14px;margin-bottom:10px}
+  .hero{width:100%;border-radius:10px;border:1px solid var(--brd);display:block;background:#0b1220}
+  .btn{display:inline-block;margin-top:14px;padding:10px 14px;border-radius:10px;text-decoration:none;border:1px solid var(--brd);background:#0b1324;color:var(--fg)}
+  .btn:hover{border-color:#375184}
+  .visit{background:var(--accent);border-color:#1da34f;color:#06220f;font-weight:600}
+  footer{color:#86a1be;text-align:center;margin:18px 0}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div>📣 <a href="{$SITE}" style="text-decoration:none">PinoyTechFeed</a></div>
-    <a href="{$SITE}/share.html">Share Dashboard</a>
-  </header>
-
-  <article class="card">
-    <h1 class="title">{$title}</h1>
-    <div class="meta">Category: {$cat} · Source: {$src} · <time datetime="{$date}">{$date}</time></div>
-    {$img ? '<img class="thumb" src="'.$img.'" alt="">' : ''}
-    <p style="margin-top:12px;line-height:1.6">{$metadesc}</p>
-    <a class="btn" href="{$link}" rel="noopener nofollow" target="_blank">Read the full article on {$src}</a>
-  </article>
-</div>
+  <main class="wrap">
+    <article class="card">
+      <h1>{$title}</h1>
+      <div class="meta">{$date} · Category: {$cat} · Source: {$src}</div>
+      <img class="hero" src="{$og}" alt="">
+      <p class="meta">This summary page lets social apps show a preview. Continue to the source:</p>
+      <a class="btn visit" href="{$it->link}" target="_blank" rel="noopener">Read full article →</a>
+      <a class="btn" href="{$SITE}" rel="noopener">Back to PinoyTechFeed</a>
+    </article>
+  </main>
+  <script>
+    // Fill safe-escaped OG text (avoids double-escaping in head)
+    document.querySelector('meta[property="og:title"]').setAttribute('content', {$j= json_encode((string)$title); echo $j;});
+    document.querySelector('meta[property="og:description"]').setAttribute('content', {$j= json_encode(shorten($desc,220)); echo $j;});
+    document.querySelector('meta[name="twitter:title"]').setAttribute('content', {$j= json_encode((string)$title); echo $j;});
+    document.querySelector('meta[name="twitter:description"]').setAttribute('content', {$j= json_encode(shorten($desc,220)); echo $j;});
+  </script>
+  <footer>© PinoyTechFeed</footer>
 </body>
 </html>
 HTML;
 
-  write_file($OUT.'/'.$file, $page);
-
-  $items_out[] = [
-    'title'=>$title,'link'=>$link,'desc'=>$metadesc,'date'=>$date,'ts'=>$ts,
-    'img'=>$img,'category'=>$cat,'source'=>$src,
-    'slug'=>$slug,'target'=>$url
-  ];
+  file_put_contents($OUTDIR.'/'.$slug,$html);
+  $written++;
 }
-
-/* ---------- rewrite feed.xml with <ptf:*> fields ---------- */
-$now = date(DATE_RSS);
-$buf = [];
-$buf[] = '<?xml version="1.0" encoding="UTF-8"?>';
-$buf[] = '<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/" xmlns:ptf="https://pinoytechfeed.pages.dev/ns">';
-$buf[] = '<channel>';
-$buf[] = '<title>PinoyTechFeed</title>';
-$buf[] = '<link>'.$SITE.'</link>';
-$buf[] = '<description>Latest gadget updates and Philippine tech news — curated by PinoyTechFeed.</description>';
-$buf[] = '<language>en</language>';
-$buf[] = '<lastBuildDate>'.$now.'</lastBuildDate>';
-$buf[] = '<generator>PinoyTechFeed Site Builder</generator>';
-
-foreach ($items_out as $p) {
-  $title = htmlspecialchars($p['title'], ENT_XML1);
-  $link  = htmlspecialchars($p['link'],  ENT_XML1);
-  $desc  = htmlspecialchars($p['desc'],  ENT_XML1);
-  $cat   = htmlspecialchars($p['category'], ENT_XML1);
-  $src   = htmlspecialchars($p['source'],   ENT_XML1);
-  $img   = htmlspecialchars($p['img'],      ENT_XML1);
-  $tgt   = htmlspecialchars($p['target'],   ENT_XML1);
-  $slug  = htmlspecialchars($p['slug'],     ENT_XML1);
-  $date  = date(DATE_RSS, $p['ts']);
-
-  $buf[] = '<item>';
-  $buf[] =   '<title>'.$title.'</title>';
-  $buf[] =   '<link>'.$link.'</link>';
-  $buf[] =   '<ptf:target>'.$tgt.'</ptf:target>';
-  $buf[] =   '<description>'.$desc.'</description>';
-  $buf[] =   '<pubDate>'.$date.'</pubDate>';
-  $buf[] =   '<guid isPermaLink="true">'.$link.'</guid>';
-  $buf[] =   '<category>'.$cat.'</category>';
-  $buf[] =   '<source>'.$src.'</source>';
-  if (!empty($img)) {
-    // keep enclosure for compatibility
-    $type = 'image/jpeg';
-    $ext = strtolower(pathinfo(parse_url($img, PHP_URL_PATH), PATHINFO_EXTENSION));
-    if ($ext==='png') $type='image/png';
-    elseif ($ext==='gif') $type='image/gif';
-    elseif ($ext==='webp') $type='image/webp';
-    $buf[] =   '<enclosure url="'.$img.'" type="'.$type.'" />';
-    $buf[] =   '<media:content url="'.$img.'" medium="image" />';
-    $buf[] =   '<ptf:img>'.$img.'</ptf:img>';
-  }
-  $buf[] =   '<ptf:slug>'.$slug.'</ptf:slug>';
-  $buf[] =   '<ptf:ts>'.$p['ts'].'</ptf:ts>';
-  $buf[] = '</item>';
-}
-$buf[] = '</channel>';
-$buf[] = '</rss>';
-
-file_put_contents($FEED, implode("\n", $buf));
-echo "✅ Built ".count($items_out)." pages in /p and rewrote feed.xml\n";
+echo "✅ Built {$written} pages in /p\n";
