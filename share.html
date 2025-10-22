@@ -30,7 +30,7 @@ header{position:sticky;top:0;background:rgba(11,18,32,.85);backdrop-filter:blur(
 
 <script>
 (async function(){
-  const FEED = '/feed.xml';
+  const FEED_URL = '/feed.xml?v=' + Date.now();
   const list = document.getElementById('list');
 
   const res = await fetch(FEED,{cache:'no-store'});
