@@ -1,7 +1,0 @@
-/feed.xml
-  Content-Type: application/rss+xml; charset=utf-8
-  Cache-Control: public, max-age=300, s-maxage=3600
-
-/index.html
-  Content-Type: text/html; charset=utf-8
-  Cache-Control: public, max-age=60
