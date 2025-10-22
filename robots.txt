@@ -1,7 +1,4 @@
 User-agent: *
 Allow: /
 
-User-agent: facebookexternalhit
-Allow: /
-User-agent: Facebot
-Allow: /
+Sitemap: https://pinoytechfeed.pages.dev/sitemap.xml
