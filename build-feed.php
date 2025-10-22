@@ -1,7 +1,7 @@
 <?php
 /**
  * build-feed.php — Aggregate 3 sources into feed.xml
- * Also writes ptf:target = /p/<slug>.html for each item (consumed by share.html)
+ * Also writes ptf:target = /p/<slug>.html for each item (used by build-site.php)
  */
 date_default_timezone_set('Asia/Manila');
 
@@ -36,28 +36,24 @@ function slugify($s){
   $s=trim($s,'-');
   return $s?:'post';
 }
-function post_slug($title,$link){
-  return slugify($title).'-'.substr(md5($link),0,5);
-}
+function post_slug($title,$link){ return slugify($title).'-'.substr(md5($link),0,5); }
 function extract_items($xml,$src){
   $out=[]; libxml_use_internal_errors(true);
   $sx=simplexml_load_string($xml); if(!$sx) return $out;
   $ns=$sx->getNamespaces(true);
-
   foreach(($sx->channel->item ?? []) as $it){
     $title=(string)$it->title;
     $link =(string)$it->link ?: $src['url'];
     $desc =(string)$it->description;
     $date =(string)$it->pubDate;
     $img  ='';
-
     if(isset($ns['media'])){
       $m=$it->children($ns['media']);
       if(isset($m->content)){ $a=$m->content->attributes(); if(!empty($a['url'])) $img=(string)$a['url']; }
       if(!$img && isset($m->thumbnail)){ $a=$m->thumbnail->attributes(); if(!empty($a['url'])) $img=(string)$a['url']; }
     }
     if(!$img && isset($it->enclosure)){ $a=$it->enclosure->attributes(); if(!empty($a['url'])) $img=(string)$a['url']; }
-    if(!$img && $desc && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i',$desc,$m)) $img=$m[1];
+    if(!$img && $desc && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i',$desc,$mm)) $img=$mm[1];
 
     $out[$link]=[
       'title'=>trim($title),
