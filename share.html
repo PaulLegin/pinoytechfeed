@@ -4,25 +4,20 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>PinoyTechFeed · Share Dashboard</title>
-<meta name="robots" content="noindex,nofollow" />
 <style>
   :root { --bg:#0b1220; --fg:#e2e8f0; --muted:#94a3b8; --card:#0f172a; --brd:#213048; --accent:#22c55e;}
   body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue","Noto Sans",Arial;}
-  header{position:sticky;top:0;background:rgba(11,18,32,.9);backdrop-filter: blur(8px);border-bottom:1px solid var(--brd);padding:14px 16px;z-index:10}
-  h1{margin:0;font-size:22px}
+  header{position:sticky;top:0;background:rgba(11,18,32,.85);backdrop-filter: blur(8px);border-bottom:1px solid var(--brd);padding:12px 16px;z-index:10}
+  h1{margin:0;font-size:20px}
   .wrap{max-width:1100px;margin:16px auto;padding:0 16px}
-  .grid{display:grid;grid-template-columns:1fr;gap:14px}
-  .card{background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+  .card{background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
   .meta{color:var(--muted);font-size:12px}
-  .title{font-weight:700;line-height:1.3;font-size:20px;margin:8px 0}
-  .thumb{width:100%;max-height:420px;object-fit:cover;border-radius:8px;border:1px solid var(--brd);background:#0b1220}
-  .btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-  .btn{display:inline-block;border:1px solid var(--brd);background:#0b1324;color:var(--fg);padding:10px 12px;border-radius:10px;text-decoration:none;font-size:14px;cursor:pointer}
-  .btn:hover{border-color:#375184}
+  .title{font-weight:600;line-height:1.3}
+  .thumb{width:100%;height:180px;object-fit:cover;border-radius:8px;border:1px solid var(--brd);background:#0b1220}
+  .btn{display:inline-block;border:1px solid var(--brd);background:#0b1324;color:var(--fg);padding:8px 12px;border-radius:8px;text-decoration:none;font-size:14px;cursor:pointer}
   .btn-accent{background:var(--accent);border-color:#1da34f;color:#06220f}
-  .pill{display:inline-block;border:1px solid var(--brd);padding:4px 10px;border-radius:999px;margin:0 6px 6px 0;font-size:12px}
-  .headstat{border:1px dashed #496698;border-radius:8px;padding:8px 10px;color:#a8c4ff;margin:10px 0}
-  .muted{color:#94a3b8}
+  .btnrow{display:flex;flex-wrap:wrap;gap:8px}
 </style>
 </head>
 <body>
@@ -34,133 +29,62 @@
 </header>
 
 <main class="wrap">
-  <div id="stats" class="headstat">Loading…</div>
-  <div id="list" class="grid" aria-live="polite">Loading…</div>
-  <p class="muted" style="margin:28px 0">Tips: For Page scheduling, open Meta Business Suite and paste the link or the copied caption.</p>
+  <div id="debug" class="meta">Loading…</div>
+  <div id="list" class="grid"></div>
 </main>
 
 <script>
-(function(){
-  const FEED = '/feed.xml?v=' + Date.now();  // cache-buster
-  const SITE = location.origin;
+(async function() {
   const listEl = document.getElementById('list');
-  const statsEl = document.getElementById('stats');
+  const debugEl = document.getElementById('debug');
 
-  const HASHTAG = '#PinoyTechFeed';
+  function utm(u){ const url=new URL(u); url.searchParams.set('utm_source','facebook'); url.searchParams.set('utm_medium','social'); url.searchParams.set('utm_campaign','ptf_share'); return url.toString(); }
 
-  function briefDate(s){
-    try { return new Date(s).toLocaleString(); } catch { return s; }
-  }
-  function addUTM(url, src='facebook'){
-    try{
-      const u = new URL(url);
-      u.searchParams.set('utm_source', src);
-      u.searchParams.set('utm_medium','social');
-      u.searchParams.set('utm_campaign','ptf_share');
-      return u.toString();
-    }catch{return url;}
-  }
-  function caption(it){
-    const link = it.target || it.link;
-    return `${it.title} — Read more: ${addUTM(link,'facebook')} ${HASHTAG}`;
-  }
+  try{
+    const res = await fetch('/feed.xml?ts=' + Date.now(), {cache:'no-store'});
+    const txt = await res.text();
+    const xml = new DOMParser().parseFromString(txt,'application/xml');
+    const items = [...xml.querySelectorAll('item')].map(n=>{
+      const title = n.querySelector('title')?.textContent?.trim() || '';
+      const link  = n.querySelector('link')?.textContent?.trim() || '';
+      const date  = n.querySelector('pubDate')?.textContent?.trim() || '';
+      const cat   = n.querySelector('category')?.textContent?.trim() || '';
+      const src   = n.querySelector('source')?.textContent?.trim() || '';
+      let img     = n.querySelector('enclosure')?.getAttribute('url') || '';
+      if(!img){ const mc = n.querySelector('media\\:content'); if(mc) img = mc.getAttribute('url') || ''; }
+      const target= n.querySelector('ptf\\:target')?.textContent?.trim() || '';
+      return {title, link, date, img, cat, src, target};
+    });
 
-  function summarize(items){
-    const c = {all:items.length, gadgets:0, ph:0, tech:0, unknown:0};
-    for (const x of items){
-      const t = (x.category || '').toLowerCase();
-      if (t.includes('gadget')) c.gadgets++;
-      else if (t.startsWith('ph')) c.ph++;
-      else if (t.includes('tech')) c.tech++;
-      else c.unknown++;
-    }
-    statsEl.textContent = `Loaded ${c.all} · Gadgets: ${c.gadgets} · PH: ${c.ph} · Tech: ${c.tech} · Unknown: ${c.unknown}`;
-  }
+    debugEl.textContent = `Loaded ${items.length} · Gadgets: ${items.filter(i=>/GADGET/i.test(i.cat)).length} · PH: ${items.filter(i=>/^PH\b/i.test(i.cat)).length} · Tech: ${items.filter(i=>/TECH/i.test(i.cat)).length}`;
 
-  function render(items){
-    summarize(items);
-    const rows = items.map(it => {
-      const img = it.img ? `<img class="thumb" src="${it.img}" alt="">` : `<div class="thumb" style="display:flex;align-items:center;justify-content:center;color:#5f77a3">?</div>`;
-      const siteLink = it.target || it.link;
+    listEl.innerHTML = items.map(it=>{
+      const when = new Date(it.date).toLocaleString();
+      const siteLink = it.target ? utm(it.target) : utm(it.link);
+      const caption = `${it.title} — Read more: ${siteLink} #PinoyTechFeed`;
       return `
-        <article class="card">
-          ${img}
-          <div class="title"><a href="${siteLink}" target="_blank" rel="noopener">${it.title}</a></div>
-          <div class="meta">${briefDate(it.date)}</div>
-          <div class="meta">Category: ${it.category || '—'} · Source: ${it.source || ''}</div>
-          <div class="btnrow">
-            <button class="btn" data-copy="${encodeURIComponent(caption(it))}">Copy caption</button>
-            <button class="btn" data-copy="${encodeURIComponent(addUTM(siteLink,'facebook'))}">Copy site link</button>
-          </div>
-        </article>
-      `;
+      <article class="card">
+        ${it.img ? `<img class="thumb" src="${it.img}" alt="">` : `<div class="thumb"></div>`}
+        <div class="title"><a href="${it.link}" target="_blank" rel="noopener">${it.title}</a></div>
+        <div class="meta">${when}</div>
+        <div class="meta">Category: ${(it.cat||'').toUpperCase()} · Source: ${it.src||''}</div>
+        <div class="btnrow">
+          <button class="btn" data-copy="${encodeURIComponent(caption)}">Copy caption</button>
+          <button class="btn" data-copy="${encodeURIComponent(siteLink)}">Copy site link</button>
+        </div>
+      </article>`;
     }).join('');
-    listEl.innerHTML = rows || '<div class="muted">No items.</div>';
+
     [...listEl.querySelectorAll('button[data-copy]')].forEach(b=>{
       b.addEventListener('click', async ()=>{
-        const t = decodeURIComponent(b.getAttribute('data-copy'));
-        try { await navigator.clipboard.writeText(t); b.textContent='Copied!'; setTimeout(()=>b.textContent='Copy caption',1500); }
-        catch { prompt('Copy this:', t); }
+        const val = decodeURIComponent(b.getAttribute('data-copy'));
+        try{ await navigator.clipboard.writeText(val); alert('Copied!'); }
+        catch{ prompt('Copy this:', val); }
       });
     });
+  }catch(err){
+    debugEl.textContent = 'Failed to load feed.';
   }
-
-  function pick(node, tag){
-    const el = node.getElementsByTagName(tag)[0];
-    return el ? (el.textContent || '').trim() : '';
-  }
-
-  async function load(){
-    try{
-      const res = await fetch(FEED, {cache:'no-store'});
-      if (!res.ok) throw new Error('HTTP '+res.status);
-      const text = await res.text();
-
-      // try XML
-      const xml = (new DOMParser()).parseFromString(text,'application/xml');
-      const perr = xml.getElementsByTagName('parsererror')[0];
-      let nodes = [];
-      if (!perr) nodes = [...xml.getElementsByTagName('item')];
-
-      let items = [];
-      if (nodes.length){
-        items = nodes.map(n=>{
-          const title = pick(n,'title') || '(no title)';
-          const link  = pick(n,'link');
-          const date  = pick(n,'pubDate');
-          const cat   = pick(n,'category');
-          const src   = pick(n,'source');
-          const tgt   = pick(n,'ptf:target') || pick(n,'target'); // namespaced or plain
-          const img   = (n.getElementsByTagName('enclosure')[0]?.getAttribute('url'))
-                     || (n.getElementsByTagName('media:content')[0]?.getAttribute('url'))
-                     || pick(n,'ptf:img');
-          return {title, link, date, category:cat, source:src, img, target:tgt};
-        });
-      } else {
-        // fallback: manual chunk parse
-        const chunks = text.split(/<\/item>/i).filter(s=>/<item>/i.test(s)).map(s=>s+'</item>');
-        items = chunks.map(c=>{
-          const rx = t => (c.match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)<\\/${t}>`,'i'))?.[1]||'').trim();
-          const enc = c.match(/<enclosure[^>]*url=["']([^"']+)["']/i)?.[1];
-          const mrc = c.match(/<(?:media:content|content)[^>]*url=["']([^"']+)["']/i)?.[1];
-          return {
-            title: rx('title'), link: rx('link'), date: rx('pubDate'),
-            category: rx('category'), source: rx('source'),
-            target: rx('ptf:target'), img: rx('ptf:img') || enc || mrc
-          };
-        });
-      }
-
-      // sort newest first if dates exist
-      items.sort((a,b)=> (new Date(b.date)-new Date(a.date)));
-      render(items);
-    }catch(e){
-      statsEl.textContent = 'Failed to load feed: ' + e.message;
-      listEl.innerHTML = '<div class="muted">Could not load feed.xml</div>';
-    }
-  }
-
-  load();
 })();
 </script>
 </body>
