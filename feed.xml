@@ -1,56 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0"
-     xmlns:media="http://search.yahoo.com/mrss/"
-     xmlns:atom="http://www.w3.org/2005/Atom"
-     xmlns:ptf="https://pinoytechfeed.pages.dev/ns#">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>PinoyTechFeed</title>
-    <link>https://pinoytechfeed.pages.dev</link>
-    <description>Latest gadget updates and Philippine tech news — curated by PinoyTechFeed.</description>
+    <title>Pinoy Tech Feed</title>
+    <link>https://pinoytechfeed.pages.dev/</link>
+    <description>Pinoy tech updates, gadgets, apps, innovation — curated headlines.</description>
     <language>en</language>
-    <lastBuildDate>Wed, 22 Oct 2025 12:00:00 +0800</lastBuildDate>
-    <generator>PinoyTechFeed RSS Generator</generator>
+    <lastBuildDate>Wed, 22 Oct 2025 06:30:00 GMT</lastBuildDate>
+    <ttl>30</ttl>
+    <atom:link href="https://pinoytechfeed.pages.dev/feed.xml" rel="self" type="application/rss+xml" />
 
-    <!-- Example #1 (PH News / GMA) -->
     <item>
-      <title>Marcos vows to continue cleansing gov't ranks despite being hard, painful</title>
-      <link>https://pinoytechfeed.pages.dev/p/marcos-vows-to-continue.html</link>
-      <ptf:target>https://www.gmanetwork.com/news/topstories/nation/963175/marcos-vows-to-continue-cleansing-gov-t-ranks-despite-being-hard-painful/story/</ptf:target>
-      <description>President Ferdinand “Bongbong” Marcos Jr. on Tuesday ensured that the government continues to cleanse its ranks.</description>
-      <pubDate>Tue, 21 Oct 2025 15:55:54 +0800</pubDate>
-      <guid isPermaLink="true">https://pinoytechfeed.pages.dev/p/marcos-vows-to-continue.html</guid>
-      <category>PH News</category>
-      <source>GMA News</source>
-      <enclosure url="https://images.gmanews.tv/webpics/2025/10/metrobank_most_outstanding_public_service_10-21-25_2025_10_21_15_25_37.jpg" type="image/jpeg"/>
-      <media:content url="https://images.gmanews.tv/webpics/2025/10/metrobank_most_outstanding_public_service_10-21-25_2025_10_21_15_25_37.jpg" medium="image"/>
-    </item>
-
-    <!-- Example #2 (Gadgets / GSMArena) -->
-    <item>
-      <title>Huawei Mate 70 Air listed online, design and key specs revealed</title>
-      <link>https://pinoytechfeed.pages.dev/p/huawei-mate-70-air.html</link>
-      <ptf:target>https://www.gsmarena.com/huawei_mate_70_air_listed_online_design_and_key_specs_revealed-news-69988.php</ptf:target>
-      <description>Huawei may add a new phone to last year’s Mate 70 lineup soon...</description>
-      <pubDate>Tue, 21 Oct 2025 15:40:02 +0800</pubDate>
-      <guid isPermaLink="true">https://pinoytechfeed.pages.dev/p/huawei-mate-70-air.html</guid>
-      <category>Gadgets</category>
-      <source>GSMArena</source>
-      <enclosure url="https://fdn.gsmarena.com/imgroot/news/25/10/huawei-mate-70-air-china-telecom/-184x111/gsmarena_000.jpg" type="image/jpeg"/>
-      <media:content url="https://fdn.gsmarena.com/imgroot/news/25/10/huawei-mate-70-air-china-telecom/-184x111/gsmarena_000.jpg" medium="image"/>
-    </item>
-
-    <!-- Example #3 (Tech & Innovation / Interesting Engineering) -->
-    <item>
-      <title>SpaceX launches Starlink V3 satellites with upgraded propulsion system</title>
-      <link>https://pinoytechfeed.pages.dev/p/spacex-launches-starlink-v3.html</link>
-      <ptf:target>https://interestingengineering.com/innovation/spacex-launches-starlink-v3-satellites</ptf:target>
-      <description>SpaceX successfully deployed the first batch of Starlink V3 satellites featuring improved ion thrusters...</description>
-      <pubDate>Tue, 21 Oct 2025 14:20:00 +0800</pubDate>
-      <guid isPermaLink="true">https://pinoytechfeed.pages.dev/p/spacex-launches-starlink-v3.html</guid>
-      <category>Tech &amp; Innovation</category>
-      <source>Interesting Engineering</source>
-      <enclosure url="https://assets.interestingengineering.com/images/starlink-v3.jpg" type="image/jpeg"/>
-      <media:content url="https://assets.interestingengineering.com/images/starlink-v3.jpg" medium="image"/>
+      <title>Sample Article – New Tech Launch</title>
+      <link>https://sample-site.com/new-tech-launch</link>
+      <guid isPermaLink="true">https://sample-site.com/new-tech-launch</guid>
+      <pubDate>Wed, 22 Oct 2025 06:00:00 GMT</pubDate>
+      <description><![CDATA[An overview of the latest gadget innovations launched this week.]]></description>
+      <enclosure url="https://sample-site.com/images/launch.jpg" type="image/jpeg" />
     </item>
 
   </channel>
