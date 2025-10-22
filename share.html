@@ -62,6 +62,7 @@
 <script>
 (function() {
   const FEED_URL = '/feed.xml';
+  const MAP_URL  = '/p/map.json'; // built by build-site.php
   const UTM_BASE = { utm_medium: 'social', utm_campaign: 'ptf_share' };
 
   const listEl = document.getElementById('list');
@@ -72,33 +73,16 @@
 
   let items = [];
   let currentFilter = '';
+  let map = {}; // srcLink -> sitePage
 
-  function showDebug(msg) {
-    debugEl.style.display = 'block';
-    debugEl.textContent = msg;
-  }
-
-  // ——— IMAGE PROXY (fixes broken thumbs / hotlink protection) ———
-  function proxyImg(url, w=1200, h=630) {
-    if (!url) return '';
-    try {
-      // weserv requires host without scheme
-      const u = new URL(url);
-      const hostPath = u.host + u.pathname + (u.search || '');
-      return `https://images.weserv.nl/?url=${encodeURIComponent(hostPath)}&w=${w}&h=${h}&fit=cover&we`;
-    } catch {
-      return url; // fallback
-    }
-  }
+  function showDebug(msg) { debugEl.style.display='block'; debugEl.textContent = msg; }
 
   function addUTM(url, source) {
     try {
       const u = new URL(url);
-      const params = u.searchParams;
-      params.set('utm_source', source);
-      params.set('utm_medium', UTM_BASE.utm_medium);
-      params.set('utm_campaign', UTM_BASE.utm_campaign);
-      u.search = params.toString();
+      u.searchParams.set('utm_source', source);
+      u.searchParams.set('utm_medium', UTM_BASE.utm_medium);
+      u.searchParams.set('utm_campaign', UTM_BASE.utm_campaign);
       return u.toString();
     } catch {
       const sep = url.includes('?') ? '&' : '?';
@@ -113,31 +97,21 @@
     return '#PinoyTechFeed';
   }
 
-  function toCaption(it, withHashtags = true) {
-    const hash = withHashtags ? ` ${hashtagsFor(it.tag)}` : '';
-    const link = addUTM(it.target || it.link, 'facebook'); // prefer site link if present
-    return `${it.title} — Read more: ${link}${hash}`;
+  const slugify = (s)=> s.toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
+
+  function siteTargetFor(it) {
+    // 1) map.json (most accurate)
+    if (map[it.link]) return map[it.link];
+    // 2) guess by title slug (works if unique)
+    const guess = '/p/' + slugify(it.title) + '.html';
+    return guess;
   }
 
-  // Prefer <category> → else infer by domain
-  function categoryToTag(catText) {
-    const s = (catText || '').toLowerCase().trim();
-    if (s.includes('gadgets')) return 'gadgets';
-    if (s.includes('ph')) return 'ph';
-    if (s.includes('tech')) return 'tech';
-    return '';
-  }
-  function domainToTag(link) {
-    try {
-      const u = new URL(link);
-      const host = u.hostname.toLowerCase();
-      const path = u.pathname.toLowerCase();
-      if (host.includes('gsmarena')) return 'gadgets';
-      if (host.includes('gmanetwork')) return 'ph';
-      if (host.includes('interestingengineering') || host.includes('inquirer')) return 'tech';
-      if (path.includes('/technology') || path.includes('/tech') || path.includes('/innovation')) return 'tech';
-    } catch {}
-    return '';
+  function toCaption(it, withHashtags = true) {
+    const hash = withHashtags ? ` ${hashtagsFor(it.tag)}` : '';
+    const link = addUTM(siteTargetFor(it), 'facebook');
+    return `${it.title} — Read more: ${link}${hash}`;
   }
 
   function summarizeCounts(items) {
@@ -159,17 +133,16 @@
       const matchesQ = !q || (it.title.toLowerCase().includes(q) || it.link.toLowerCase().includes(q));
       if (!(matchesTab && matchesQ)) continue;
 
-      const imgSrc = proxyImg(it.img, 960, 540); // <<— use proxy
-      const linkOut = it.target || it.link;      // prefer site page if provided by feed
+      const siteUrl = siteTargetFor(it);
       rows.push(`
         <article class="card">
-          ${imgSrc ? `<img class="thumb" src="${imgSrc}" alt="">` : ``}
-          <div class="title"><a href="${linkOut}" target="_blank" rel="noopener">${it.title}</a></div>
+          ${it.img ? `<img class="thumb" src="${it.img}" referrerpolicy="no-referrer" onerror="this.style.display='none'" alt="">` : ``}
+          <div class="title"><a href="${siteUrl}" target="_blank" rel="noopener">${it.title}</a></div>
           <div class="meta">${new Date(it.date).toLocaleString()}</div>
-          <div class="source">Category: ${it.tag ? it.tag.toUpperCase() : 'General'} · Source: ${it.source || ''}</div>
+          <div class="source">Category: ${it.tag ? it.tag.toUpperCase() : 'GENERAL'} · Source: ${it.source || ''}</div>
           <div class="btnrow">
             <button class="btn" data-copy="${encodeURIComponent(toCaption(it))}">Copy caption</button>
-            <button class="btn" data-copy-site="${encodeURIComponent(addUTM(linkOut,'facebook'))}">Copy site link</button>
+            <button class="btn" data-copysite="${encodeURIComponent(addUTM(siteUrl,'facebook'))}">Copy site link</button>
           </div>
         </article>
       `);
@@ -183,10 +156,10 @@
         catch { prompt('Copy this:', text); }
       });
     });
-    [...listEl.querySelectorAll('button[data-copy-site]')].forEach(btn => {
+    [...listEl.querySelectorAll('button[data-copysite]')].forEach(btn => {
       btn.addEventListener('click', async () => {
-        const text = decodeURIComponent(btn.getAttribute('data-copy-site'));
-        try { await navigator.clipboard.writeText(text); alert('Link copied!'); }
+        const text = decodeURIComponent(btn.getAttribute('data-copysite'));
+        try { await navigator.clipboard.writeText(text); alert('Site link copied!'); }
         catch { prompt('Copy this:', text); }
       });
     });
@@ -205,70 +178,75 @@
     const shown = [...listEl.querySelectorAll('.card')].slice(0,3);
     const caps = shown.map(card => {
       const title = card.querySelector('.title')?.innerText || '';
-      const link  = card.querySelector('.title a')?.href || '';
-      const withUtm = addUTM(link, 'facebook');
+      const site   = card.querySelector('.title a')?.href || '';
+      const withUtm = addUTM(site, 'facebook');
       return `${title} — Read more: ${withUtm} #PinoyTechFeed`;
     }).join('\n\n');
     try { await navigator.clipboard.writeText(caps); alert('Top 3 captions copied!'); }
     catch { prompt('Copy these:', caps); }
   });
 
-  // Loader (XML + fallback parser)
+  // Helpers to map category to tag (if needed)
+  function categoryToTag(catText) {
+    const s=(catText||'').toLowerCase();
+    if (s.includes('gadget')) return 'gadgets';
+    if (s.includes('ph')) return 'ph';
+    if (s.includes('tech')) return 'tech';
+    return '';
+  }
+  function domainToTag(link) {
+    try {
+      const u=new URL(link); const h=u.hostname.toLowerCase(); const p=u.pathname.toLowerCase();
+      if (h.includes('gsmarena')) return 'gadgets';
+      if (h.includes('gmanetwork')) return 'ph';
+      if (h.includes('interestingengineering') || h.includes('inquirer')) return 'tech';
+      if (p.includes('/tech')||p.includes('/technology')||p.includes('/innovation')) return 'tech';
+    } catch {}
+    return '';
+  }
+
   async function load() {
     try {
+      // try to get /p/map.json (optional)
+      try {
+        const m = await fetch(MAP_URL, {cache:'no-store'});
+        if (m.ok) map = await m.json();
+      } catch {}
+
       const res = await fetch(FEED_URL, { cache: 'no-store' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
+      const xml = new DOMParser().parseFromString(text, 'application/xml');
+      let nodes = Array.from(xml.getElementsByTagName('item'));
 
-      const parser = new DOMParser();
-      const xml = parser.parseFromString(text, 'application/xml');
-      const parseErr = xml.getElementsByTagName('parsererror')[0];
-
-      let nodes = [];
-      if (!parseErr) nodes = Array.from(xml.getElementsByTagName('item'));
-
-      if (parseErr || nodes.length === 0) {
-        const chunks = text.split(/<\/item>/i).filter(s => /<item>/i.test(s)).map(s => s + '</item>');
-        items = chunks.map((chunk) => {
-          const pick = (tag) => (chunk.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'))?.[1] || '').trim();
-          const title = pick('title');
-          const link  = pick('link');
-          const date  = pick('pubDate');
-          const cat   = pick('category');
-          const enc   = chunk.match(/<enclosure[^>]*url=["']([^"']+)["']/i)?.[1];
-          const mrss  = chunk.match(/<(?:media:content|content)[^>]*url=["']([^"']+)["']/i)?.[1];
-          const img   = enc || mrss || '';
-          const tag   = categoryToTag(cat) || domainToTag(link);
-          const target = (chunk.match(/<ptf:target>([^<]+)<\/ptf:target>/i)?.[1] || '').trim(); // site page if present
-          let source = pick('source') || '';
-          if (!source) { try { source = new URL(link).hostname.replace(/^www\./,''); } catch {} }
-          return { title, link, date, img, tag, source, target };
+      if (!nodes.length) {
+        // manual chunk fallback
+        const chunks = text.split(/<\/item>/i).filter(s=>/<item>/i.test(s)).map(s=>s+'</item>');
+        items = chunks.map((chunk)=>{
+          const pick = (tag)=> (chunk.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`,'i'))?.[1] || '').trim();
+          const enc  = chunk.match(/<enclosure[^>]*url=["']([^"']+)["']/i)?.[1];
+          const mrss = chunk.match(/<(?:media:content|content)[^>]*url=["']([^"']+)["']/i)?.[1];
+          const img  = enc || mrss || '';
+          const tag  = categoryToTag(pick('category')) || domainToTag(pick('link'));
+          return { title: pick('title'), link: pick('link'), date: pick('pubDate'), img, tag, source: pick('source') };
         });
       } else {
-        items = nodes.map((it) => {
-          const get = (tag) => (it.getElementsByTagName(tag)[0]?.textContent || '').trim();
-          const title = get('title') || '(no title)';
-          const link  = get('link');
-          const date  = get('pubDate');
-          const cat   = get('category');
-          let img = '';
-          const enclosure = it.getElementsByTagName('enclosure')[0];
-          if (enclosure && enclosure.getAttribute('url')) img = enclosure.getAttribute('url');
+        items = nodes.map((it)=>{
+          const get=(tag)=> (it.getElementsByTagName(tag)[0]?.textContent || '').trim();
+          let img='';
+          const enc = it.getElementsByTagName('enclosure')[0];
+          if (enc && enc.getAttribute('url')) img = enc.getAttribute('url');
           if (!img) {
-            const media1 = it.getElementsByTagName('media:content')[0];
-            const media2 = it.getElementsByTagName('content')[0];
-            const node = media1 || media2;
-            if (node && node.getAttribute('url')) img = node.getAttribute('url');
+            const m1 = it.getElementsByTagName('media:content')[0];
+            const m2 = it.getElementsByTagName('content')[0];
+            const node = m1||m2; if (node && node.getAttribute('url')) img = node.getAttribute('url');
           }
-          const tag = categoryToTag(cat) || domainToTag(link);
-          const target = get('ptf:target'); // site page if present
-          let source = get('source') || '';
-          if (!source) { try { source = new URL(link).hostname.replace(/^www\./,''); } catch {} }
-          return { title, link, date, img, tag, source, target };
+          const tag = categoryToTag(get('category')) || domainToTag(get('link'));
+          return { title:get('title')||'(no title)', link:get('link'), date:get('pubDate'), img, tag, source:get('source') };
         });
       }
 
-      showDebug(summarizeCounts(items));
+      showDebug((()=>{const c={all:items.length,gadgets:0,ph:0,tech:0,unknown:0};items.forEach(it=>{if(it.tag==='gadgets')c.gadgets++;else if(it.tag==='ph')c.ph++;else if(it.tag==='tech')c.tech++;else c.unknown++;});return `Loaded ${c.all} · Gadgets: ${c.gadgets} · PH: ${c.ph} · Tech: ${c.tech} · Unknown: ${c.unknown}`;})());
       render();
     } catch (err) {
       showDebug('Failed to load feed: ' + String(err));
