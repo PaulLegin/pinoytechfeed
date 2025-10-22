@@ -12,8 +12,7 @@ $OGDEF  = $SITE.'/og-default.jpg';   // upload this image to repo root
 if(!is_dir($OUTDIR)) mkdir($OUTDIR,0777,true);
 
 function shorten($s,$n=220){ $s=trim(preg_replace('/\s+/',' ',$s??'')); return mb_strlen($s)>$n?mb_substr($s,0,$n-1).'…':$s; }
-function safe($s){ return htmlspecialchars($s,ENT_QUOTES); }
-function pick_img($img){ return $img && preg_match('~^https?://~',$img) ? $img : $GLOBALS['OGDEF']; }
+function pick_img($img){ return ($img && preg_match('~^https?://~',$img)) ? $img : $GLOBALS['OGDEF']; }
 
 $xml=@simplexml_load_file($FEED);
 if(!$xml){ fwrite(STDERR,"feed.xml missing/invalid\n"); exit(1); }
@@ -33,27 +32,29 @@ foreach($xml->channel->item as $it){
 
   $slug=basename(parse_url($target,PHP_URL_PATH));
   $og = pick_img($img);
+  $safeTitle = htmlspecialchars($title,ENT_QUOTES);
+  $safeDesc  = htmlspecialchars(shorten($desc,220),ENT_QUOTES);
 
   $html = <<<HTML
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>{$title} · PinoyTechFeed</title>
+<title>{$safeTitle} · PinoyTechFeed</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="PinoyTechFeed">
-<meta property="og:title" content=".::SAFE::.">
-<meta property="og:description" content=".::SAFE::.">
+<meta property="og:title" content="{$safeTitle}">
+<meta property="og:description" content="{$safeDesc}">
 <meta property="og:url" content="{$SITE}/p/{$slug}">
 <meta property="og:image" content="{$og}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content=".::SAFE::.">
-<meta name="twitter:description" content=".::SAFE::.">
+<meta name="twitter:title" content="{$safeTitle}">
+<meta name="twitter:description" content="{$safeDesc}">
 <meta name="twitter:image" content="{$og}">
 <style>
   :root{--bg:#0b1220;--fg:#e2e8f0;--muted:#94a3b8;--accent:#22c55e;--card:#0f172a;--brd:#213048;}
@@ -63,7 +64,7 @@ foreach($xml->channel->item as $it){
   h1{margin:0 0 6px;font-size:28px}
   .meta{color:var(--muted);font-size:14px;margin-bottom:10px}
   .hero{width:100%;border-radius:10px;border:1px solid var(--brd);display:block;background:#0b1220}
-  .btn{display:inline-block;margin-top:14px;padding:10px 14px;border-radius:10px;text-decoration:none;border:1px solid var(--brd);background:#0b1324;color:var(--fg)}
+  .btn{display:inline-block;margin-top:14px;padding:10px 14px;border-radius:10px;text-decoration:none;border:1px solid var(--brd);background:#0b1324;color:#fff}
   .btn:hover{border-color:#375184}
   .visit{background:var(--accent);border-color:#1da34f;color:#06220f;font-weight:600}
   footer{color:#86a1be;text-align:center;margin:18px 0}
@@ -72,7 +73,7 @@ foreach($xml->channel->item as $it){
 <body>
   <main class="wrap">
     <article class="card">
-      <h1>{$title}</h1>
+      <h1>{$safeTitle}</h1>
       <div class="meta">{$date} · Category: {$cat} · Source: {$src}</div>
       <img class="hero" src="{$og}" alt="">
       <p class="meta">This summary page lets social apps show a preview. Continue to the source:</p>
@@ -80,13 +81,6 @@ foreach($xml->channel->item as $it){
       <a class="btn" href="{$SITE}" rel="noopener">Back to PinoyTechFeed</a>
     </article>
   </main>
-  <script>
-    // Fill safe-escaped OG text (avoids double-escaping in head)
-    document.querySelector('meta[property="og:title"]').setAttribute('content', {$j= json_encode((string)$title); echo $j;});
-    document.querySelector('meta[property="og:description"]').setAttribute('content', {$j= json_encode(shorten($desc,220)); echo $j;});
-    document.querySelector('meta[name="twitter:title"]').setAttribute('content', {$j= json_encode((string)$title); echo $j;});
-    document.querySelector('meta[name="twitter:description"]').setAttribute('content', {$j= json_encode(shorten($desc,220)); echo $j;});
-  </script>
   <footer>© PinoyTechFeed</footer>
 </body>
 </html>
