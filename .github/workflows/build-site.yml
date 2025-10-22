@@ -1,0 +1,43 @@
+name: Build site pages from feed
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - feed.xml
+      - build-site.php
+  schedule:
+    - cron: "*/30 * * * *"  # every 30 min (optional)
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set site origin
+        run: echo "SITE_ORIGIN=https://pinoytechfeed.pages.dev" >> $GITHUB_ENV
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+
+      - name: Generate /p pages
+        run: php build-site.php
+
+      - name: Commit generated pages
+        run: |
+          if [ -n "$(git status --porcelain p/)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add p/
+            git commit -m "chore(site): regenerate pages from feed"
+            git push
+          else
+            echo "No changes in /p"
+          fi
