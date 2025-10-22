@@ -1,18 +1,27 @@
 <?php
 // build-site.php
-// Generate article pages (/p/*.html) with Open Graph tags for Facebook thumbnail
+// Generates /p/*.html article pages with full Open Graph + proxy thumbnail support
 
-$SITE = 'https://pinoytechfeed.pages.dev'; // change if needed
+$SITE = 'https://pinoytechfeed.pages.dev'; // your site base URL
 $DATA = json_decode(file_get_contents('feed.json'), true);
 $OUT = __DIR__ . '/p';
-
 if (!is_dir($OUT)) mkdir($OUT, 0777, true);
+
+// Image proxy (fixes hotlink & Facebook preview)
+function proxy_img($url, $w=1200, $h=630) {
+  if (!$url) return '';
+  $u = parse_url($url);
+  if (empty($u['host'])) return $url;
+  $hostPath = $u['host'] . ($u['path'] ?? '') . (isset($u['query']) ? '?'.$u['query'] : '');
+  return 'https://images.weserv.nl/?url=' . rawurlencode($hostPath) . "&w={$w}&h={$h}&fit=cover&we";
+}
 
 foreach ($DATA as $p) {
   $slug = $p['slug'];
   $title = htmlspecialchars($p['title'], ENT_QUOTES);
   $desc = htmlspecialchars($p['desc'] ?: $p['title'], ENT_QUOTES);
   $img  = $p['img'] ?: "$SITE/assets/ptf-cover.png";
+  $ogImg = proxy_img($img); // use proxy for OG
   $cat  = htmlspecialchars($p['category']);
   $src  = htmlspecialchars($p['source']);
   $date = htmlspecialchars($p['ts']);
@@ -33,15 +42,17 @@ foreach ($DATA as $p) {
 <meta property="og:title" content="$title">
 <meta property="og:description" content="$desc">
 <meta property="og:url" content="$url">
-<meta property="og:image" content="$img">
+<meta property="og:image" content="$ogImg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="$title">
 <meta property="og:locale" content="en_PH">
 
-<!-- Twitter Card -->
+<!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="$title">
 <meta name="twitter:description" content="$desc">
-<meta name="twitter:image" content="$img">
+<meta name="twitter:image" content="$ogImg">
 
 <style>
   body {font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;margin:0;padding:0;background:#0b1220;color:#e2e8f0;}
@@ -55,7 +66,7 @@ foreach ($DATA as $p) {
   <div class="wrap">
     <h1>$title</h1>
     <div class="meta">📅 $date · 🏷️ $cat · 🔗 $src</div>
-    <img src="$img" alt="$title">
+    <img src="$ogImg" alt="$title">
     <p style="margin-top:16px;">$desc</p>
     <p><a href="{$p['target']}" target="_blank" rel="noopener">Read full article from $src →</a></p>
     <p><a href="$SITE" style="color:#94a3b8;">← Back to PinoyTechFeed</a></p>
